@@ -12,26 +12,27 @@ using namespace GStuff::Helper;
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
 
-
 constexpr float vertices[] = {
     -0.5f, -0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
      0.0f,  0.5f, 0.0f
 };  
 
-const std::string vsSource =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main(){\n"
-"  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}";
+const std::string vsSource = 
+  "#version 330 core\n"
+  "layout (location = 0) in vec3 aPos;\n"
+  "void main(){\n"
+  "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+  "}";
 
-const std::string fsSource = 
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}";
+
+const std::string fsSource =  
+  "#version 330 core\n"
+  "out vec4 FragColor;\n"
+  "void main() {\n"
+  "  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+  "}";
+
 
 int main(int argc, char* argv[]) {
 
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
 
   // Vertex Shader 
   ObjID vertexShader { glCreateShader(GL_VERTEX_SHADER) };
-  const char* vsCodePtr = vsSource.c_str();
+  const char* vsCodePtr { vsSource.c_str() };
   glShaderSource(vertexShader, 1, &vsCodePtr, nullptr);
   glCompileShader(vertexShader);
   if(!isShaderCompileSuccessful(vertexShader)) {
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
 
   // Fragment shader
   ObjID fragmentShader { glCreateShader(GL_FRAGMENT_SHADER) };
-  const char* fsCodePtr = fsSource.c_str();
+  const char* fsCodePtr { fsSource.c_str() };
   glShaderSource(fragmentShader, 1, &fsCodePtr, nullptr);
   glCompileShader(fragmentShader);
   if(!isShaderCompileSuccessful(fragmentShader)) {
@@ -87,8 +88,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  ObjID VAO;
-  ObjID VBO;
+  ObjID VAO, VBO;
 
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
