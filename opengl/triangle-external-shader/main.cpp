@@ -14,12 +14,20 @@ using namespace GStuff::Helper;
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
 
-constexpr float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
-};  
+struct Vertex3Df {
+  union {
+    float vals[3] {};
+    struct {
+      float x, y, z;
+    };
+  };
+};
 
+constexpr Vertex3Df vertices[] = {
+  { .vals = {-0.5f, -0.5f, 0.0f} },  
+  { .vals = { 0.5f, -0.5f, 0.0f} },  
+  { .vals = { 0.0f,  0.5f, 0.0f} }  
+};
 
 int main(int argc, char* argv[]) {
 
@@ -85,24 +93,22 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  // Use it and clean up shader object handlers
+  glUseProgram(shaderProgram);
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragmentShader);
+  
   ObjID VAO, VBO;
-
   glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
-
   glGenBuffers(1, &VBO);
+  
+  glBindVertexArray(VAO);
+  
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
-  
-  // Use it and clean up shader object handlers
-  glUseProgram(shaderProgram);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
-
-  glBindVertexArray(VAO);
   
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
