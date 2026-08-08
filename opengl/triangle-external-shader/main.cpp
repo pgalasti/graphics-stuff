@@ -6,11 +6,14 @@
 
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <fstream>
 
 using namespace GStuff::Helper;
 
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
+std::string LoadFileStr(const std::string& path);
 
 constexpr float vertices[] = {
     -0.5f, -0.5f, 0.0f,
@@ -18,23 +21,17 @@ constexpr float vertices[] = {
      0.0f,  0.5f, 0.0f
 };  
 
-const std::string vsSource = 
-  "#version 330 core\n"
-  "layout (location = 0) in vec3 aPos;\n"
-  "void main(){\n"
-  "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-  "}";
-
-
-const std::string fsSource =  
-  "#version 330 core\n"
-  "out vec4 FragColor;\n"
-  "void main() {\n"
-  "  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-  "}";
-
 
 int main(int argc, char* argv[]) {
+
+  std::string vsSource, fsSource;
+  try { 
+    vsSource = LoadFileStr("./shaders/vs.glsl"); 
+    fsSource = LoadFileStr("./shaders/fs.glsl"); 
+  } catch(const std::string& errorMsg) {
+    std::cerr << errorMsg << std::endl;
+    return 1;
+  }
 
   // Wayland stuff makes life hard
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
@@ -72,6 +69,7 @@ int main(int argc, char* argv[]) {
 
   // Fragment shader
   ObjID fragmentShader { glCreateShader(GL_FRAGMENT_SHADER) };
+
   const char* fsCodePtr { fsSource.c_str() };
   glShaderSource(fragmentShader, 1, &fsCodePtr, nullptr);
   glCompileShader(fragmentShader);
@@ -133,3 +131,18 @@ void handleInput(GLFWwindow* pWindow) {
   }
 }
 
+std::string LoadFileStr(const std::string& path) {
+  std::ifstream file(path);
+
+  if(!file.is_open()) {
+    throw std::string("Unable to open file at: ") + path;
+  } 
+
+  std::string fileContents;
+  std::string line;
+  while(std::getline(file, line)) {
+    fileContents += line+"\n"; 
+  }
+
+  return fileContents;
+}
