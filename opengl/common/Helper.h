@@ -4,6 +4,7 @@
 #include"defines.h"
 
 #include<iostream>
+#include<fstream>
 
 namespace GStuff::Helper {
 
@@ -33,6 +34,22 @@ bool isProgramLinkSuccessful(const ObjID programId) {
   }
 
   return true;
+}
+
+std::string LoadFileStr(const std::string& path) {
+  std::ifstream file;
+ 
+  file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  file.open(path);
+  file.exceptions(std::ifstream::badbit);
+
+  std::string fileContents;
+  std::string line;
+  while(std::getline(file, line)) {
+    fileContents += line+"\n";
+  }
+
+  return fileContents;
 }
 
 }

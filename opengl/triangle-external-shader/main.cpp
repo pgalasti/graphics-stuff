@@ -13,7 +13,6 @@ using namespace GStuff::Helper;
 
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
-std::string LoadFileStr(const std::string& path);
 
 constexpr float vertices[] = {
     -0.5f, -0.5f, 0.0f,
@@ -28,8 +27,8 @@ int main(int argc, char* argv[]) {
   try { 
     vsSource = LoadFileStr("./shaders/vs.glsl"); 
     fsSource = LoadFileStr("./shaders/fs.glsl"); 
-  } catch(const std::string& errorMsg) {
-    std::cerr << errorMsg << std::endl;
+  } catch(const std::ios_base::failure& ex) {
+    std::cerr << "Error loading shader contents: " << ex.what() << std::endl;
     return 1;
   }
 
@@ -129,20 +128,4 @@ void handleInput(GLFWwindow* pWindow) {
   if(glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(pWindow, true);
   }
-}
-
-std::string LoadFileStr(const std::string& path) {
-  std::ifstream file(path);
-
-  if(!file.is_open()) {
-    throw std::string("Unable to open file at: ") + path;
-  } 
-
-  std::string fileContents;
-  std::string line;
-  while(std::getline(file, line)) {
-    fileContents += line+"\n"; 
-  }
-
-  return fileContents;
 }
