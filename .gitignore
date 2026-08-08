@@ -1,0 +1,12 @@
+# Compiled binaries
+opengl/triangle/triangle
+
+# Object files / build artifacts
+*.o
+*.obj
+*.out
+*.a
+*.so
+
+# Build directories
+build/
