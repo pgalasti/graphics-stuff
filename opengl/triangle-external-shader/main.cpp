@@ -1,8 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "common/defines.h"
-#include "common/Helper.h"
+#include "general/Math.h"
+#include "opengl/common/defines.h"
+#include "opengl/common/Helper.h"
 
 #include <iostream>
 #include <string>
@@ -10,19 +11,10 @@
 #include <fstream>
 
 using namespace GStuff::Helper;
+using namespace GStuff::General::Math;
 
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
-
-template <typename T>
-struct Vertex3D {
-  union {
-    T vals[3] {};
-    struct {
-      T x, y, z;
-    };
-  };
-};
 
 constexpr Vertex3D<float> vertices[] = {
   { .vals = {-0.5f, -0.5f, 0.0f} },  
