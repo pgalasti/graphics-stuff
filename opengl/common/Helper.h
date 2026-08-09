@@ -6,7 +6,7 @@
 #include<iostream>
 #include<fstream>
 
-namespace GStuff::Helper {
+namespace GStuff::OpenGL::Helper {
 
 bool isShaderCompileSuccessful(const ObjID shaderId) {
   int success{};

@@ -10,7 +10,7 @@
 #include <string_view>
 #include <fstream>
 
-using namespace GStuff::Helper;
+using namespace GStuff::OpenGL::Helper;
 using namespace GStuff::General::Math;
 
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
