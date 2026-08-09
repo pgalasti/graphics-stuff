@@ -14,16 +14,17 @@ using namespace GStuff::Helper;
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
 
-struct Vertex3Df {
+template <typename T>
+struct Vertex3D {
   union {
-    float vals[3] {};
+    T vals[3] {};
     struct {
-      float x, y, z;
+      T x, y, z;
     };
   };
 };
 
-constexpr Vertex3Df vertices[] = {
+constexpr Vertex3D<float> vertices[] = {
   { .vals = {-0.5f, -0.5f, 0.0f} },  
   { .vals = { 0.5f, -0.5f, 0.0f} },  
   { .vals = { 0.0f,  0.5f, 0.0f} }  
@@ -107,7 +108,7 @@ int main(int argc, char* argv[]) {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3Df), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D<float>), (void*)0);
   glEnableVertexAttribArray(0);
   
   while(!glfwWindowShouldClose(pWindow)) {
