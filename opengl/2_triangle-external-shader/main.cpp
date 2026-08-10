@@ -13,7 +13,7 @@
 using namespace GStuff::OpenGL::Helper;
 using namespace GStuff::General::Math;
 
-void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
+//void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);
 
 constexpr Vertex3D<float> vertices[] = {
@@ -48,7 +48,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   glfwMakeContextCurrent(pWindow);
-  glfwSetFramebufferSizeCallback(pWindow, frameBufferSize_callback);
+  glfwSetFramebufferSizeCallback(pWindow, [](GLFWwindow* pWindow, int width, int height) { glViewport(0, 0, width, height); });
+  //glfwSetFramebufferSizeCallback(pWindow, frameBufferSize_callback);
 
   glewExperimental = GL_TRUE;
   if(glewInit() != GLEW_OK) {
@@ -120,9 +121,9 @@ int main(int argc, char* argv[]) {
 }
 
 
-void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height) {
-  glViewport(0, 0, width, height);
-}
+//void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height) {
+//  glViewport(0, 0, width, height);
+//}
 
 
 void handleInput(GLFWwindow* pWindow) {
