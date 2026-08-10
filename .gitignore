@@ -3,6 +3,7 @@ opengl/triangle/triangle
 
 # Object files / build artifacts
 *.o
+*.d
 *.obj
 *.out
 *.a

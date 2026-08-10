@@ -3,12 +3,15 @@
 
 #include"defines.h"
 
+#include<GL/glew.h>
+
 #include<iostream>
 #include<fstream>
+#include<string>
 
 namespace GStuff::OpenGL::Helper {
 
-bool isShaderCompileSuccessful(const ObjID shaderId) {
+inline bool isShaderCompileSuccessful(const ObjID shaderId) {
   int success{};
   char infoLog[512];
 
@@ -22,7 +25,7 @@ bool isShaderCompileSuccessful(const ObjID shaderId) {
   return true;
 }
 
-bool isProgramLinkSuccessful(const ObjID programId) {
+inline bool isProgramLinkSuccessful(const ObjID programId) {
   int success{};
   char infoLog[512];
 
@@ -36,9 +39,9 @@ bool isProgramLinkSuccessful(const ObjID programId) {
   return true;
 }
 
-std::string LoadFileStr(const std::string& path) {
+inline std::string LoadFileStr(const std::string& path) {
   std::ifstream file;
- 
+
   file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   file.open(path);
   file.exceptions(std::ifstream::badbit);
