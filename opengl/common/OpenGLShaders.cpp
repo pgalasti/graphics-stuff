@@ -49,4 +49,29 @@ std::string OpenGLShader::ReadShaderText() const {
   return m_ShaderContents;
 }
 
+void OpenGLProgram::Link() {
+  m_ProgramID = glCreateProgram();
+  for(const ShaderPtr& shader : m_Shaders) {
+    glAttachShader(m_ProgramID, shader->ShaderID());
+  }
+
+  glLinkProgram(m_ProgramID);
+  if(!isProgramLinkSuccessful(m_ProgramID)) {
+    std::exit(EXIT_FAILURE);
+  }
+
+  for(const ShaderPtr& shader : m_Shaders) {
+    glDetachShader(m_ProgramID, shader->ShaderID());
+  }
+  m_Shaders.clear();
+}
+
+OpenGLProgram::~OpenGLProgram() {
+  glDeleteProgram(m_ProgramID);
+}
+
+void OpenGLProgram::Activate(bool active) {
+  glUseProgram(active ? m_ProgramID : 0);
+}
+
 }

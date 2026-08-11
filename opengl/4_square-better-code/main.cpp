@@ -62,15 +62,11 @@ int main(int argc, char* argv[]) {
   ObjID vsID {vertexShader.ShaderID()};
   ObjID fsID {fragmentShader.ShaderID()};
 
-  // Create the program
-  ObjID shaderProgram { glCreateProgram() };
-  glAttachShader(shaderProgram, vsID) ;
-  glAttachShader(shaderProgram, fsID);
-  glLinkProgram(shaderProgram);
-  if(!isProgramLinkSuccessful(shaderProgram)) {
-    return 1;
-  }
-  
+  OpenGLProgram program {
+    std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
+    std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
+  }; 
+
   ObjID VAO, VBO, EBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -95,7 +91,7 @@ int main(int argc, char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    glUseProgram(shaderProgram);
+    program.Activate();
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

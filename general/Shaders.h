@@ -46,7 +46,8 @@ public:
   virtual ~Program() = default;
 
   virtual void Activate(bool active = true) = 0;
-private:
+
+protected:
   std::vector<ShaderPtr> m_Shaders;
 };
 
