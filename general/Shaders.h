@@ -7,6 +7,8 @@
 #include <concepts>
 #include <utility>
 
+#include <glm/glm.hpp>
+
 namespace GStuff::General::Shaders {
 
 class Shader {
@@ -46,7 +48,8 @@ public:
   virtual ~Program() = default;
 
   virtual void Activate(bool active = true) = 0;
-
+  virtual void SetConstant(const std::string& name, const glm::vec3& vec) = 0;
+  // Probably setup more as I go
 protected:
   std::vector<ShaderPtr> m_Shaders;
 };

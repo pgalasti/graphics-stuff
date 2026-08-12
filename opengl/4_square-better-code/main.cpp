@@ -82,7 +82,8 @@ int main(int argc, char* argv[]) {
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D<float>), static_cast<void*>(0));
   glEnableVertexAttribArray(0);
-  
+ 
+
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
     glfwSwapBuffers(pWindow);
@@ -92,6 +93,8 @@ int main(int argc, char* argv[]) {
     glClear(GL_COLOR_BUFFER_BIT);
     
     program.Activate();
+    program.SetConstant("triangleColor", glm::vec3{1.0f, 0.0f, 0.0f});
+    
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

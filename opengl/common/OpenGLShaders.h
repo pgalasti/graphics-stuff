@@ -46,6 +46,7 @@ public:
     return m_ProgramID;
   }
 
+  void SetConstant(const std::string& name, const glm::vec3& vec);
 private:
   void Link();
 

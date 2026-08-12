@@ -1,7 +1,7 @@
 CXX      := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra
 LDLIBS   := -lGLEW -lglfw -lGL
-INCLUDES := -I../../
+INCLUDES := -I../../ -I../../general/glm
 
 TARGET   := square
 COMMON   := ../common
