@@ -1,0 +1,3 @@
+[submodule "general/glm"]
+	path = general/glm
+	url = git@github.com:g-truc/glm.git
