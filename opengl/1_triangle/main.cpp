@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-using namespace GStuff::Helper;
+using namespace GStuff::OpenGL::Helper;
 
 void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);

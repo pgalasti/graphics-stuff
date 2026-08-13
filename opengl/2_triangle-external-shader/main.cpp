@@ -12,6 +12,7 @@
 
 using namespace GStuff::OpenGL::Helper;
 using namespace GStuff::General::Math;
+using namespace GStuff::General;
 
 //void frameBufferSize_callback(GLFWwindow* pWindow, int width, int height);
 void handleInput(GLFWwindow* pWindow);

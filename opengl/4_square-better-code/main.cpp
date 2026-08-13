@@ -13,6 +13,7 @@
 
 using namespace GStuff::OpenGL;
 using namespace GStuff::OpenGL::Helper;
+using namespace GStuff::General;
 using namespace GStuff::General::Shaders;
 using namespace GStuff::General::Math;
 
