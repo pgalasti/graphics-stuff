@@ -31,9 +31,12 @@ constexpr Vertex3DUVf vertices[] = {
 };
 
 constexpr unsigned int indices[] = {
-   0, 1, 2,
-   0, 3, 2
+   0, 3, 2,
+   2, 1, 0
 };
+
+constexpr GLuint CONTAINER_UNIT {0};
+constexpr GLuint WALL_UNIT      {1};
 
 int main(int argc, char* argv[]) {
 
@@ -47,7 +50,7 @@ int main(int argc, char* argv[]) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* pWindow {glfwCreateWindow(800, 600, "texture", nullptr, nullptr)};
+  GLFWwindow* pWindow {glfwCreateWindow(800, 600, "texture mix", nullptr, nullptr)};
   if(!pWindow) {
     std::cerr << "Failed to create window!\n";
     glfwTerminate();
@@ -88,16 +91,23 @@ int main(int argc, char* argv[]) {
   glEnableVertexAttribArray(1);
  
   int width, height, nChannels;
-  TextureData* textureData = stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0);
+  TextureData* textureData {stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0)};
   if(!textureData) {
     throw std::runtime_error("Unable to load texture data from file system!");
   }
-
-  Texture texture(textureData, width, height, GL_RGB);
+  Texture containerTexture(textureData, width, height, GL_RGB);
+  stbi_image_free(textureData);
+  
+  textureData = stbi_load("./textures/wall.jpg", &width, &height, &nChannels, 0);
+  if(!textureData) {
+    throw std::runtime_error("Unable to load texture data from file system!");
+  }
+  Texture wallTexture(textureData, width, height, GL_RGB);
   stbi_image_free(textureData);
 
   program.Activate();
-  program.SetConstant("ourTexture", 0);
+  program.SetConstant("containerTexture", CONTAINER_UNIT);
+  program.SetConstant("wallTexture", WALL_UNIT);
 
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
@@ -109,7 +119,9 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(VAO);
     
     program.Activate();
-    texture.Bind(0);
+    // These don't need to be called each draw but I'll keep here for now
+    containerTexture.Bind(CONTAINER_UNIT);
+    wallTexture.Bind(WALL_UNIT);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
