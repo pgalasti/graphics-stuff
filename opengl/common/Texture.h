@@ -13,10 +13,18 @@ public:
   Texture(const TextureData* data, int width, int height, GLenum format);
   ~Texture();
 
-  Texture(Texture&&) = delete;
-  Texture& operator=(Texture&&) = delete;
+  Texture(Texture&& other) noexcept : m_ID{other.m_ID} { other.m_ID = 0; }
+  Texture& operator=(Texture&& other) noexcept {
+    if(this != &other) {
+      glDeleteTextures(1, &m_ID);
+      m_ID = other.m_ID;
+      other.m_ID = 0;
+    }
+    return *this;
+  }
+
   Texture(const Texture&) = delete;
-  Texture& operator=(const Texture&) = delete; 
+  Texture& operator=(const Texture&) = delete;
 
   void Bind(GLuint num);
 
