@@ -62,11 +62,6 @@ int main(int argc, char* argv[]) {
   }
   std::cout << "OpenGL Version Loaded: " << glGetString(GL_VERSION) << std::endl;
 
-  OpenGLShader vertexShader("./shaders/vs.glsl", Shader::ShaderType::Vertex); 
-  OpenGLShader fragmentShader("./shaders/fs.glsl", Shader::ShaderType::Fragment); 
-  ObjID vsID {vertexShader.ShaderID()};
-  ObjID fsID {fragmentShader.ShaderID()};
-
   OpenGLProgram program {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
     std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
@@ -117,12 +112,12 @@ int main(int argc, char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glBindVertexArray(VAO);
+    
     program.Activate();
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
