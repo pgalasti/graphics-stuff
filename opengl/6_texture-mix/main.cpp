@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
   glEnableVertexAttribArray(1);
  
   int width, height, nChannels;
+  stbi_set_flip_vertically_on_load(true);
   TextureData* textureData {stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0)};
   if(!textureData) {
     throw std::runtime_error("Unable to load texture data from file system!");
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]) {
   Texture containerTexture(textureData, width, height, GL_RGB);
   stbi_image_free(textureData);
   
-  textureData = stbi_load("./textures/wall.jpg", &width, &height, &nChannels, 0);
+  textureData = stbi_load("./textures/cats.jpg", &width, &height, &nChannels, 0);
   if(!textureData) {
     throw std::runtime_error("Unable to load texture data from file system!");
   }
