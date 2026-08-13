@@ -74,9 +74,25 @@ void OpenGLProgram::Activate(bool active) {
   glUseProgram(active ? m_ProgramID : 0);
 }
 
+namespace {
+
+int uniformLocationOrWarn(ObjID programID, const std::string& name) {
+  int location {glGetUniformLocation(programID, name.c_str())};
+  if(location == -1) {
+    std::cerr << "Uniform '" << name << "' not found in program " << programID
+              << " (misspelled, or optimized out because it is unused)\n";
+  }
+  return location;
+}
+
+}
+
 void OpenGLProgram::SetConstant(const std::string& name, const glm::vec3& vec) {
-  int uniformLocation {glGetUniformLocation(m_ProgramID, name.c_str())};
-  glUniform3f(uniformLocation, vec.x, vec.y, vec.z);
+  glUniform3f(uniformLocationOrWarn(m_ProgramID, name), vec.x, vec.y, vec.z);
+}
+
+void OpenGLProgram::SetConstant(const std::string& name, int value) {
+  glUniform1i(uniformLocationOrWarn(m_ProgramID, name), value);
 }
 
 }

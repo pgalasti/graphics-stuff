@@ -1,13 +1,14 @@
+#include "general/Math.h"
+#include "opengl/common/defines.h"
+#include "opengl/common/Helper.h"
+#include "opengl/common/OpenGLShaders.h"
+#include "opengl/common/Texture.h"
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-#include "general/Math.h"
-#include "opengl/common/defines.h"
-#include "opengl/common/Helper.h"
-#include "opengl/common/OpenGLShaders.h"
 
 #include <iostream>
 #include <string>
@@ -86,24 +87,17 @@ int main(int argc, char* argv[]) {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3DUVf), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(1);
  
-  ObjID textureID{};
-  glGenTextures(1, &textureID);
-  glBindTexture(GL_TEXTURE_2D, textureID);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
   int width, height, nChannels;
   TextureData* textureData = stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0);
   if(!textureData) {
     throw std::runtime_error("Unable to load texture data from file system!");
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-  glGenerateMipmap(GL_TEXTURE_2D);
-
+  Texture texture(textureData, width, height, GL_RGB);
   stbi_image_free(textureData);
+
+  program.Activate();
+  program.SetConstant("ourTexture", 0);
 
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
@@ -115,8 +109,7 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(VAO);
     
     program.Activate();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    texture.Bind(0);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

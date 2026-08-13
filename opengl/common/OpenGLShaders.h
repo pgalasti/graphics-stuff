@@ -47,6 +47,7 @@ public:
   }
 
   void SetConstant(const std::string& name, const glm::vec3& vec);
+  void SetConstant(const std::string& name, int value);
 private:
   void Link();
 

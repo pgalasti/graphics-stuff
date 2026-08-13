@@ -5,7 +5,7 @@ INCLUDES := -I../../ -I../../general/glm -I../../general/stb
 
 TARGET   := texture
 COMMON   := ../common
-SRCS     := main.cpp $(COMMON)/OpenGLShaders.cpp
+SRCS     := main.cpp $(COMMON)/OpenGLShaders.cpp $(COMMON)/Texture.cpp
 OBJS     := $(notdir $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 

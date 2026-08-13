@@ -9,5 +9,8 @@ opengl/triangle/triangle
 *.a
 *.so
 
+# Temp edit files
+*.swp
+
 # Build directories
 build/
