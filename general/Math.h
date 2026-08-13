@@ -27,5 +27,17 @@ struct Vertex3DUV {
 
 using Vertex3DUVf = Vertex3DUV<float>;
 
+template <typename T>
+struct Vertex3DRGBUV {
+  union {
+    T vals[8] {};
+    struct {
+      T x, y, z, r, g, b, u, v;
+    };
+  };
+};
+
+using Vertex3DRGBUVf = Vertex3DRGBUV<float>;
+
 }
 #endif 
