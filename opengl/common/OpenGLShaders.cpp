@@ -75,7 +75,6 @@ void OpenGLProgram::Activate(bool active) {
 }
 
 void OpenGLProgram::SetConstant(const std::string& name, const glm::vec3& vec) {
-
   int uniformLocation {glGetUniformLocation(m_ProgramID, name.c_str())};
   glUniform3f(uniformLocation, vec.x, vec.y, vec.z);
 }

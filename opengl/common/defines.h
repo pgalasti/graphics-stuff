@@ -3,4 +3,6 @@
 
 using ObjID = unsigned int;
 
+using TextureData = unsigned char;
+
 #endif

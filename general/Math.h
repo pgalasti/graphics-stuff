@@ -13,5 +13,19 @@ struct Vertex3D {
   };
 };
 
+using Vertex3Df = Vertex3D<float>;
+
+template <typename T>
+struct Vertex3DUV {
+  union {
+    T vals[5] {};
+    struct {
+      T x, y, z, u, v;
+    };
+  };
+};
+
+using Vertex3DUVf = Vertex3DUV<float>;
+
 }
 #endif 

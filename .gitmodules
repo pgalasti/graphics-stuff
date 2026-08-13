@@ -1,3 +1,6 @@
 [submodule "general/glm"]
 	path = general/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "general/stb"]
+	path = general/stb
+	url = git@github.com:nothings/stb.git
