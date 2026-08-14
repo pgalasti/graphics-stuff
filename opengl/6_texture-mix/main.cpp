@@ -1,4 +1,5 @@
 #include "general/Math.h"
+#include "general/Profiler.h"
 #include "opengl/common/defines.h"
 #include "opengl/common/Helper.h"
 #include "opengl/common/OpenGLShaders.h"
@@ -20,6 +21,7 @@ using namespace GStuff::OpenGL;
 using namespace GStuff::OpenGL::Helper;
 using namespace GStuff::General::Shaders;
 using namespace GStuff::General::Math;
+using namespace GStuff::General;
 
 void handleInput(GLFWwindow* pWindow);
 
@@ -38,7 +40,7 @@ constexpr unsigned int indices[] = {
 constexpr GLuint CONTAINER_UNIT {0};
 constexpr GLuint WALL_UNIT      {1};
 
-int main(int argc, char* argv[]) {
+int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
 #ifndef __APPLE__
   // Wayland stuff makes life hard
@@ -50,14 +52,20 @@ int main(int argc, char* argv[]) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+  ProfilerMs profiler;
+
+  profiler.Start("Create Window");
   GLFWwindow* pWindow {glfwCreateWindow(800, 600, "texture mix", nullptr, nullptr)};
   if(!pWindow) {
     std::cerr << "Failed to create window!\n";
     glfwTerminate();
     return 1;
   }
+  std::cout << profiler.Stop() << std::endl;
+
   glfwMakeContextCurrent(pWindow);
-  glfwSetFramebufferSizeCallback(pWindow, [](GLFWwindow* pWindow, int width, int height) { glViewport(0, 0, width, height); });
+  glfwSwapInterval(0); // Attempt to uncap VSync
+  glfwSetFramebufferSizeCallback(pWindow, []([[maybe_unused]]GLFWwindow* pWindow, int width, int height) { glViewport(0, 0, width, height); });
 
   glewExperimental = GL_TRUE;
   if(glewInit() != GLEW_OK) {
@@ -92,7 +100,8 @@ int main(int argc, char* argv[]) {
   
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3DRGBUVf), (void*)(6*sizeof(float)));
   glEnableVertexAttribArray(2);
- 
+
+  profiler.Start("Load Textures"); 
   int width, height, nChannels;
   stbi_set_flip_vertically_on_load(true);
   TextureData* textureData {stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0)};
@@ -108,11 +117,14 @@ int main(int argc, char* argv[]) {
   }
   Texture wallTexture(textureData, width, height, GL_RGB);
   stbi_image_free(textureData);
+  std::cout << profiler.Stop() << std::endl;
 
   program.Activate();
   program.SetConstant("containerTexture", CONTAINER_UNIT);
   program.SetConstant("wallTexture", WALL_UNIT);
 
+  unsigned int frames{0};
+  profiler.Start("10000 frames");
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
     glfwPollEvents();
@@ -131,6 +143,13 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(0);
 
     glfwSwapBuffers(pWindow);
+
+    if((++frames % 10000) == 0) {
+      const auto frameSnapshot {profiler.Stop()};
+      std::cout << frameSnapshot << std::endl;
+      std::cout << "FPS: " << 10000.0/(static_cast<double>(frameSnapshot.elapsedTime)/1000) << std::endl;
+      profiler.Start();
+    }
   }
 
   glfwTerminate();
