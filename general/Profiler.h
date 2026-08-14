@@ -54,5 +54,36 @@ using ProfilerMs = Profiler<std::chrono::milliseconds>;
 
 }
 
+#define PROF_CONCAT_INNER(a, b) a##b
+#define PROF_CONCAT(a, b)       PROF_CONCAT_INNER(a, b)
 
+#ifdef __COUNTER__
+    #define PROF_UNIQUE_NAME(base) PROF_CONCAT(base, __COUNTER__)
+#else
+    #define PROF_UNIQUE_NAME(base) PROF_CONCAT(base, __LINE__)
+#endif
+
+#ifdef PROFILER_ENABLE_INLINE_MACRO
+
+    #define STDOUT_PROFILE_FUNC_MS_IMPL(prof, tagVar, tag, ...)       \
+        do {                                                          \
+            const char* tagVar = (tag);                               \
+            GStuff::General::ProfilerMs prof;                         \
+            prof.Start(tagVar);                                       \
+            (__VA_ARGS__);                                            \
+            std::cout << prof.Stop();                                 \
+        } while (0)
+
+    #define STDOUT_PROFILE_FUNC_MS(tag, ...)                          \
+        STDOUT_PROFILE_FUNC_MS_IMPL(PROF_UNIQUE_NAME(prof_),          \
+                                    PROF_UNIQUE_NAME(tag_),           \
+                                    tag, __VA_ARGS__)
+
+#else
+
+    #define STDOUT_PROFILE_FUNC_MS(tag, ...) \
+        do { (__VA_ARGS__); } while (0)
+
+#endif // PROFILER_ENABLE_INLINE_MACRO
+       
 #endif

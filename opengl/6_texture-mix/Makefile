@@ -11,7 +11,11 @@ DEPS     := $(OBJS:.o=.d)
 
 VPATH    := $(COMMON)
 
-.PHONY: all run clean
+ifeq ($(PROFILE),1)
+CXXFLAGS += -DPROFILER_ENABLE_INLINE_MACRO
+endif
+
+.PHONY: all run clean profile run-profile
 
 all: $(TARGET)
 
@@ -22,6 +26,13 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 run: $(TARGET)
+	./$(TARGET)
+
+profile:
+	$(MAKE) clean
+	$(MAKE) PROFILE=1 all
+
+run-profile: profile
 	./$(TARGET)
 
 clean:

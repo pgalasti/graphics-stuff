@@ -1,3 +1,5 @@
+//#define PROFILER_ENABLE_INLINE_MACRO
+
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "opengl/common/defines.h"
@@ -51,6 +53,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  STDOUT_PROFILE_FUNC_MS("Testing stuff", [](){std::cout << "Tested stuff!" << std::endl;}());
 
   ProfilerMs profiler;
 
