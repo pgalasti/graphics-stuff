@@ -5,6 +5,9 @@
 
 #include<GL/glew.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -55,6 +58,15 @@ inline std::string LoadFileStr(const std::string& path) {
   return fileContents;
 }
 
+inline void SetTransformation(const ObjID programID, std::string transformName, const glm::mat4& transformation) {
+  const GLint response { glGetUniformLocation(programID, transformName.c_str()) };
+  if(response < 0) {
+    throw std::runtime_error("Received invalid response upon setting transformation matrix with glGetUniformLocation");
+  }
+
+  glUniformMatrix4fv(response, 1, GL_FALSE, glm::value_ptr(transformation)); 
+}
+  
 }
 
 #endif
