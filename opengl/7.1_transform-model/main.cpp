@@ -31,9 +31,6 @@ using namespace GStuff::General;
 
 void handleInput(GLFWwindow* pWindow);
 
-constexpr GLuint CONTAINER_UNIT {0};
-constexpr GLuint WALL_UNIT      {1};
-
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
 #ifndef __APPLE__
