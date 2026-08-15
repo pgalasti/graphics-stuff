@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 namespace GStuff::General {
 
@@ -18,22 +19,27 @@ class VertexLoader {
 public:
 
   using VertexData = std::vector<VertexType>;
+  using IndexData = std::vector<unsigned int>; // probably should typedef unsigned int
+  using ModelData = std::pair<VertexData, IndexData>;
+  using LoadOptions = unsigned long;
 
   enum class Format : unsigned int {
     XY = 0,
     XYUV = 1,
     XYRGB = 2,
     XYUVRGB = 3,
-    XYZ = 3,
-    XYZUV = 4,
-    XYZRGB = 5,
-    XYZUVRGB = 6
+    XYZ = 4,
+    XYZUV = 5,
+    XYZRGB = 6,
+    XYZUVRGB = 7
   };
+
+  static constexpr LoadOptions LOAD_INDICES { 0x0001 };
 
   VertexLoader(const Format vertex_format_input) : m_Format{vertex_format_input} {};
   virtual ~VertexLoader() = default;
 
-  virtual VertexData Load(std::string_view path) = 0;
+  virtual ModelData Load(std::string_view path, LoadOptions loadOptions = 0) = 0;
 protected:
   Format m_Format;
   
@@ -42,7 +48,7 @@ protected:
     return m_Format >= Format::XY && m_Format <= Format::XYZUVRGB;
   }
   bool IsCoordinates3D() const {
-    return m_Format >= Format::XYZUV && m_Format <= Format::XYZUVRGB; 
+    return m_Format >= Format::XYZ && m_Format <= Format::XYZUVRGB;
   }
 };
 
@@ -53,15 +59,19 @@ public:
   using Base = VertexLoader<VertexType>;
   using typename Base::Format;
   using typename Base::VertexData;
+  using typename Base::IndexData;
+  using typename Base::ModelData;
+  using typename Base::LoadOptions;
 
   WavefrontVertexLoader(const Format vertex_format_input) : Base(vertex_format_input) {}
   virtual ~WavefrontVertexLoader() = default;
 
   // I need to come back and really refactor this so it's not so ugly when I load the rest of the attributes
-  VertexData Load(std::string_view path) override {
+  ModelData Load(std::string_view path, LoadOptions loadOptions = 0) override {
     std::ifstream file {Open(path)};
 
     VertexData vertexData;
+    IndexData indices; 
 
     std::string line;
     while(std::getline(file, line)) {
@@ -81,10 +91,14 @@ public:
           continue;
         }
         ProcessVertexLine(vertexData, tokens);
+	continue;
+      } else if((loadOptions & Base::LOAD_INDICES) && tokens.front() == FACE_TOKEN) {
+        ProcessFaceLine(indices, tokens);
+        continue;
       }
 
     }
-    return vertexData;
+    return {vertexData, indices};
   }
 
 private:
@@ -96,7 +110,7 @@ private:
   static constexpr std::string_view MATERIAL_LIB_TOKEN           {"mtllib"};
   static constexpr std::string_view OBJECT_NAME_TOKEN            {"o"};
   static constexpr std::string_view SMOOTHE_GROUP_TOKEN          {"s"};
-  static constexpr std::string_view INDEX_TOKEN                  {"f"};
+  static constexpr std::string_view FACE_TOKEN                   {"f"};
 
   std::ifstream Open(std::string_view path) const {
     std::ifstream file {std::string(path)};
@@ -130,7 +144,46 @@ private:
     vertexData.push_back(vertex);
   }
 
+  unsigned int ParsePositionIndex(const std::string& corner) const {
+    const auto field {corner.substr(0uz, corner.find('/'))};
+    return static_cast<unsigned int>(std::stoul(field) - 1uL);
+  }
+
+  void ProcessFaceLine(IndexData& indices, const std::vector<std::string>& tokens) const {
+    IndexData corners;
+    corners.reserve(tokens.size() - 1uz);
+    for(auto it {tokens.begin() + 1}; it != tokens.end(); ++it) {
+      corners.push_back(ParsePositionIndex(*it));
+    }
+
+    if(corners.size() < 3uz) {
+      std::cerr << "Face with fewer than 3 corners, skipping" << std::endl;
+      return;
+    }
+
+    for(auto i {1uz}; i + 1uz < corners.size(); ++i) {
+      indices.push_back(corners[0uz]);
+      indices.push_back(corners[i]);
+      indices.push_back(corners[i + 1uz]);
+    }
+  }
+
 };
+
+inline std::ostream& operator<<(std::ostream& os, const std::vector<unsigned int>& indexData) {
+  for(auto index : indexData) {
+    os << index << ", ";
+  }
+  return os;
+}
+
+template <typename VertexType>
+std::ostream& operator<<(std::ostream& os, const std::vector<VertexType>& vertexData) {
+  for(const auto& vertex : vertexData) {
+    os << vertex.x << ", " << vertex.y << ", " << vertex.z << '\n';
+  }
+  return os;
+}
 
 }
 
