@@ -141,11 +141,23 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     wallTexture.Bind(WALL_UNIT);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+    transformationMtx = glm::mat4(1.0f);
+    transformationMtx = glm::translate(transformationMtx, glm::vec3(0.5f, 0.5f, 0.0f));
+    transformationMtx = glm::rotate(transformationMtx, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "transform", transformationMtx);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
     glBindVertexArray(0);
 
     glfwSwapBuffers(pWindow);
   }
-
+  
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
+  glDeleteBuffers(1, &EBO);
   glfwTerminate();
   return 0;
 }
