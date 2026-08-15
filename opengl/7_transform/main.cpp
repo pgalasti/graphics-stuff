@@ -121,11 +121,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   program.SetConstant("containerTexture", CONTAINER_UNIT);
   program.SetConstant("wallTexture", WALL_UNIT);
 
-  glm::mat4 transformationMtx {glm::mat4(1.0f)};
-  transformationMtx = glm::rotate(transformationMtx, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  transformationMtx = glm::scale(transformationMtx, glm::vec3(1.5f, 1.5f, 1.5f));
-
-  SetTransformation(program.ProgramID(), "transform", transformationMtx);
 
   while(!glfwWindowShouldClose(pWindow)) {
     handleInput(pWindow);
@@ -133,6 +128,10 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    
+    glm::mat4 transformationMtx {glm::mat4(1.0f)};
+    transformationMtx = glm::rotate(transformationMtx, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "transform", transformationMtx);
 
     glBindVertexArray(VAO);
     
