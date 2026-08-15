@@ -11,31 +11,44 @@
 #include<iostream>
 #include<fstream>
 #include<string>
+#include<string_view>
 
 namespace GStuff::OpenGL::Helper {
 
-inline bool isShaderCompileSuccessful(const ObjID shaderId) {
+inline bool isShaderCompileSuccessful(const ObjID shaderId, std::string_view label = {}) {
   int success{};
-  char infoLog[512];
 
   glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
   if(!success) {
-    glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
-    std::cerr << "Error on shader compilation: " << infoLog << std::endl;
+    int logLength{};
+    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::string infoLog(logLength > 0 ? logLength : 1, '\0');
+    glGetShaderInfoLog(shaderId, static_cast<GLsizei>(infoLog.size()), nullptr, infoLog.data());
+
+    std::cerr << "Error compiling shader";
+    if(!label.empty()) std::cerr << " '" << label << "'";
+    std::cerr << ":\n" << infoLog.c_str() << std::endl;
     return false;
   }
 
   return true;
 }
 
-inline bool isProgramLinkSuccessful(const ObjID programId) {
+inline bool isProgramLinkSuccessful(const ObjID programId, std::string_view label = {}) {
   int success{};
-  char infoLog[512];
 
   glGetProgramiv(programId, GL_LINK_STATUS, &success);
   if(!success) {
-    glGetProgramInfoLog(programId, 512, nullptr, infoLog);
-    std::cerr << "Error on shader program linking: " << infoLog << std::endl;
+    int logLength{};
+    glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::string infoLog(logLength > 0 ? logLength : 1, '\0');
+    glGetProgramInfoLog(programId, static_cast<GLsizei>(infoLog.size()), nullptr, infoLog.data());
+
+    std::cerr << "Error linking shader program";
+    if(!label.empty()) std::cerr << " '" << label << "'";
+    std::cerr << ":\n" << infoLog.c_str() << std::endl;
     return false;
   }
 

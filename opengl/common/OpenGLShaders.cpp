@@ -35,7 +35,7 @@ OpenGLShader::OpenGLShader(const std::string& path, Shader::ShaderType type)
   const char* codePtr {m_ShaderContents.c_str()};
   glShaderSource(m_ShaderID, 1, &codePtr, nullptr);
   glCompileShader(m_ShaderID);
-  if(!isShaderCompileSuccessful(m_ShaderID)) {
+  if(!isShaderCompileSuccessful(m_ShaderID, path)) {
     std::exit(EXIT_FAILURE);
   }
 
@@ -56,7 +56,14 @@ void OpenGLProgram::Link() {
   }
 
   glLinkProgram(m_ProgramID);
-  if(!isProgramLinkSuccessful(m_ProgramID)) {
+
+  std::string label;
+  for(const ShaderPtr& shader : m_Shaders) {
+    if(!label.empty()) label += " + ";
+    label += shader->Path();
+  }
+
+  if(!isProgramLinkSuccessful(m_ProgramID, label)) {
     std::exit(EXIT_FAILURE);
   }
 
