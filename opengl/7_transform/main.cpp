@@ -1,0 +1,159 @@
+#include "general/Math.h"
+#include "general/Profiler.h"
+#include "opengl/common/defines.h"
+#include "opengl/common/Helper.h"
+#include "opengl/common/OpenGLShaders.h"
+#include "opengl/common/Texture.h"
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <fstream>
+#include <cstddef>
+
+using namespace GStuff::OpenGL;
+using namespace GStuff::OpenGL::Helper;
+using namespace GStuff::General::Shaders;
+using namespace GStuff::General::Math;
+using namespace GStuff::General;
+
+void handleInput(GLFWwindow* pWindow);
+
+constexpr Vertex3DRGBUVf vertices[] = {
+  { .vals = {-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f} }, // Bottom Left  - Red
+  { .vals = { 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f} }, // Bottom Right - Green 
+  { .vals = { 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f} }, // Top Right    - Blue
+  { .vals = { -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f} }  // Top Left     - White
+};
+
+constexpr unsigned int indices[] = {
+   0, 3, 2,
+   2, 1, 0
+};
+
+constexpr GLuint CONTAINER_UNIT {0};
+constexpr GLuint WALL_UNIT      {1};
+
+int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+#ifndef __APPLE__
+  // Wayland stuff makes life hard
+  glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
+  glfwInit();
+
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  GLFWwindow* pWindow {glfwCreateWindow(800, 600, "texture mix", nullptr, nullptr)};
+  if(!pWindow) {
+    std::cerr << "Failed to create window!\n";
+    glfwTerminate();
+    return 1;
+  }
+
+  glfwMakeContextCurrent(pWindow);
+  glfwSwapInterval(0); // Attempt to uncap VSync
+  glfwSetFramebufferSizeCallback(pWindow, []([[maybe_unused]]GLFWwindow* pWindow, int width, int height) { glViewport(0, 0, width, height); });
+
+  glewExperimental = GL_TRUE;
+  if(glewInit() != GLEW_OK) {
+    std::cerr << "Failed to init GLEW\n";
+    return 1;
+  }
+  std::cout << "OpenGL Version Loaded: " << glGetString(GL_VERSION) << std::endl;
+
+  OpenGLProgram program {
+    std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
+    std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
+  }; 
+
+  ObjID VAO, VBO, EBO;
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glGenBuffers(1, &EBO);
+  
+  glBindVertexArray(VAO);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+ 
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DRGBUVf), static_cast<void*>(0));
+  glEnableVertexAttribArray(0);
+  
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DRGBUVf), (void*)(3*sizeof(float)));
+  glEnableVertexAttribArray(1);
+  
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3DRGBUVf), (void*)(6*sizeof(float)));
+  glEnableVertexAttribArray(2);
+
+  int width, height, nChannels;
+  stbi_set_flip_vertically_on_load(true);
+  TextureData* textureData {stbi_load("./textures/container.jpg", &width, &height, &nChannels, 0)};
+  if(!textureData) {
+    throw std::runtime_error("Unable to load texture data from file system!");
+  }
+  Texture containerTexture(textureData, width, height, GL_RGB);
+  stbi_image_free(textureData);
+  
+  textureData = stbi_load("./textures/cats.jpg", &width, &height, &nChannels, 0);
+  if(!textureData) {
+    throw std::runtime_error("Unable to load texture data from file system!");
+  }
+  Texture wallTexture(textureData, width, height, GL_RGB);
+  stbi_image_free(textureData);
+
+  program.Activate();
+  program.SetConstant("containerTexture", CONTAINER_UNIT);
+  program.SetConstant("wallTexture", WALL_UNIT);
+
+  glm::mat4 transformationMtx {glm::mat4(1.0f)};
+  transformationMtx = glm::rotate(transformationMtx, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  transformationMtx = glm::scale(transformationMtx, glm::vec3(0.5f, 0.5f, 0.5f));
+  const GLint transformationLocation { glGetUniformLocation(program.ProgramID(), "transform") };
+  glUniformMatrix4fv(transformationLocation, 1, GL_FALSE, glm::value_ptr(transformationMtx));
+
+
+  while(!glfwWindowShouldClose(pWindow)) {
+    handleInput(pWindow);
+    glfwPollEvents();
+
+    glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glBindVertexArray(VAO);
+    
+    program.Activate();
+    // These don't need to be called each draw but I'll keep here for now
+    containerTexture.Bind(CONTAINER_UNIT);
+    wallTexture.Bind(WALL_UNIT);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    glfwSwapBuffers(pWindow);
+  }
+
+  glfwTerminate();
+  return 0;
+}
+
+void handleInput(GLFWwindow* pWindow) {
+  if(glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(pWindow, true);
+  }
+}
