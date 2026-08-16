@@ -37,6 +37,9 @@ using ModelLoader = WavefrontVertexLoader<Vertex3DRGBf>;
 void handleInput(GLFWwindow* pWindow);
 void addColors(ModelLoader::VertexData& vertices);
 
+constexpr int WINDOW_WIDTH  {800};
+constexpr int WINDOW_HEIGHT {600};
+
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
 #ifndef __APPLE__
@@ -49,7 +52,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* pWindow {glfwCreateWindow(800, 600, "texture mix", nullptr, nullptr)};
+  GLFWwindow* pWindow {glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "texture mix", nullptr, nullptr)};
   if(!pWindow) {
     std::cerr << "Failed to create window!\n";
     glfwTerminate();
@@ -121,10 +124,18 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glm::mat4 transformationMtx {glm::mat4(1.0f)};
-    transformationMtx = glm::scale(transformationMtx, glm::vec3(0.25f, 0.25f, 0.25f));
-    transformationMtx = glm::rotate(transformationMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
-    SetTransformation(program.ProgramID(), "transform", transformationMtx);
+    glm::mat4 modelMtx {glm::mat4(1.0f)};
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
+    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "model", modelMtx);
+
+    glm::mat4 viewMtx {glm::mat4(1.0f)};
+    viewMtx = glm::translate(viewMtx, glm::vec3(0.0f, 0.0f, -3.0f));
+    SetTransformation(program.ProgramID(), "view", viewMtx);
+
+    glm::mat4 projMtx {glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 100.0f)}; 
+    SetTransformation(program.ProgramID(), "projection", projMtx);
+     
 
     glBindVertexArray(VAO);
     
