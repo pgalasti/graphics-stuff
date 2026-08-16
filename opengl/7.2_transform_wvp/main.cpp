@@ -133,16 +133,38 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     viewMtx = glm::translate(viewMtx, glm::vec3(0.0f, 0.0f, -3.0f));
     SetTransformation(program.ProgramID(), "view", viewMtx);
 
-    glm::mat4 projMtx {glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 100.0f)}; 
+    glm::mat4 projMtx {glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 1000.0f)}; 
     SetTransformation(program.ProgramID(), "projection", projMtx);
      
-
     glBindVertexArray(VAO);
-    
     program.Activate();
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
+    // Draw a few more for perspective, why not
+    modelMtx = glm::mat4(1.0f);
+    modelMtx = glm::translate(modelMtx, glm::vec3(-2.0f, 0.0f, -5.0f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
+    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "model", modelMtx);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    
+    modelMtx = glm::mat4(1.0f);
+    modelMtx = glm::translate(modelMtx, glm::vec3(2.0f, 0.0f, -1.0f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
+    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "model", modelMtx);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+    modelMtx = glm::mat4(1.0f);
+    modelMtx = glm::translate(modelMtx, glm::vec3(1.0f, 3.0f, -20.0f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
+    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+    SetTransformation(program.ProgramID(), "model", modelMtx);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    
+    
+    
     glBindVertexArray(0);
 
     glfwSwapBuffers(pWindow);
