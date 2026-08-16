@@ -1,7 +1,18 @@
 CXX      := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra
-LDLIBS   := -lGLEW -lglfw -lGL
 INCLUDES := -I../../ -I../../general/glm -I../../general/stb
+
+UNAME_S  := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+LDLIBS   := -lGLEW -lglfw -framework OpenGL
+INCLUDES += -I/opt/homebrew/include
+LDFLAGS  := -L/opt/homebrew/lib
+else
+LDLIBS   := -lGLEW -lglfw -lGL
+LDFLAGS  :=
+endif
+
 
 TARGET   := transform 
 COMMON   := ../common
@@ -20,7 +31,7 @@ endif
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET) $(LDLIBS) $(LDFLAGS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
