@@ -41,11 +41,24 @@ void addColors(ModelLoader::VertexData& vertices);
 
 constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
+constexpr float NEAR {0.1f};
+constexpr float FAR  {1000.0f};
+constexpr float ASPECT       {static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT)};
+constexpr float ORTHO_HEIGHT {6.0f}; // World units visible vertically
 
 OpenGLCamera camera(0.0f, 0.0f, 3);
 FrameStatf g_FrameStat;
 
+bool doOrtho{false};
+
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+  if(argc > 1) {
+    doOrtho = (*argv[1] == 'o');
+    if(doOrtho) {
+      std::cout << "Orthogonal Mode enabled!" << std::endl;
+    }
+  }
 
 #ifndef __APPLE__
   // Wayland stuff makes life hard
@@ -100,9 +113,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   OpenGLProgram program {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
     std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
-  }; 
-
-  ObjID VAO, VBO, EBO;
+  };
+  ObjID VAO, VBO, EBO; 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
@@ -122,8 +134,19 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
   camera.Target(0.0f, 0.0f, 0.0f);
   camera.Up(0.0f, 1.0f, 0.0f);
-
+  
   program.Activate();
+
+  if(doOrtho) { 
+    constexpr float orthoHalfHeight {ORTHO_HEIGHT*0.5f};
+    constexpr float orthoHalfWidth  {orthoHalfHeight*ASPECT};
+    camera.SetOrthogonal(-orthoHalfWidth, orthoHalfWidth, -orthoHalfHeight, orthoHalfHeight, NEAR, FAR);
+  } else {
+    camera.SetPerspective(glm::radians(45.0f), ASPECT, NEAR, FAR);
+  }
+
+  const glm::mat4 projection { camera.Projection() };
+  SetTransformation(program.ProgramID(), "projection", projection);
 
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
@@ -139,11 +162,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
     SetTransformation(program.ProgramID(), "model", modelMtx);
 
-    glm::mat4 lookAt { camera.Apply() };
+    glm::mat4 lookAt { camera.ApplyView() };
     SetTransformation(program.ProgramID(), "view", lookAt);
-
-    glm::mat4 projMtx {glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 1000.0f)}; 
-    SetTransformation(program.ProgramID(), "projection", projMtx);
      
     glBindVertexArray(VAO);
     program.Activate();

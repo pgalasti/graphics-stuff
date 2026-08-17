@@ -20,7 +20,7 @@ void OpenGLCamera::UpdateBasis() {
   m_CameraUp        = glm::normalize(glm::cross(m_CameraRight, m_CameraFront));
 }
 
-glm::mat4 OpenGLCamera::Apply() {
+glm::mat4 OpenGLCamera::ApplyView() {
   if(!m_HasTarget) {
     throw std::runtime_error("Camera is in an invalid state (Target not specified)");
   }
@@ -55,4 +55,36 @@ void OpenGLCamera::Move(Camera::Direction direction, float step) {
     break;
   }
 
+}
+
+void OpenGLCamera::SetOrthogonal(float left, float right, float bottom, float top, float near, float far) {
+  m_ProjectionMetrics.Left   = left;  
+  m_ProjectionMetrics.Right  = right;  
+  m_ProjectionMetrics.Bottom = bottom;  
+  m_ProjectionMetrics.Top    = top;  
+  m_ProjectionMetrics.Near   = near;  
+  m_ProjectionMetrics.Far    = far;
+
+  m_ProjectionType = ProjectionType::Orthogonal;
+}
+
+void OpenGLCamera::SetPerspective(float fovRadians, float aspectRatio, float near, float far) {
+  m_ProjectionMetrics.FovRadians  = fovRadians;
+  m_ProjectionMetrics.AspectRatio = aspectRatio;
+  m_ProjectionMetrics.Near        = near;  
+  m_ProjectionMetrics.Far         = far;  
+  
+  m_ProjectionType = ProjectionType::Perspective;
+}
+
+glm::mat4 OpenGLCamera::Projection() {
+
+  const auto [near, far, left, right, bottom, top, fovRadians, aspectRatio] = m_ProjectionMetrics; 
+
+  if(m_ProjectionType == ProjectionType::Perspective) {
+    return glm::perspective(fovRadians, aspectRatio, near, far);
+  } else if(m_ProjectionType == ProjectionType::Orthogonal) {
+    return glm::ortho(left, right, bottom, top, near, far);
+  }
+  throw std::runtime_error("Projection Type (Orthogonal/Perspective) is in an invalid state!");
 }

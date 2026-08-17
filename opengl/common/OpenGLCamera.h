@@ -8,6 +8,9 @@
 
 using namespace GStuff::General;
 
+enum class ProjectionType {
+ NotSet, Orthogonal, Perspective 
+};
 
 class OpenGLCamera : public Camera<glm::mat4, glm::vec3, float> {
 public:
@@ -16,7 +19,12 @@ public:
 
   void Move(Camera::Direction direction, float step) override;
 
-  glm::mat4 Apply() override;
+  glm::mat4 ApplyView() override;
+  glm::mat4 Projection() override;
+
+  // Type set by last function called. Maybe a setter could be used later if needed
+  void SetOrthogonal(float left, float right, float bottom, float top, float near, float far) override;
+  void SetPerspective(float fovRadians, float aspectRatio, float near, float far) override;
 
 protected:
   void OnTargetChanged() override;
@@ -30,6 +38,22 @@ private:
   glm::vec3 m_CameraDirection;
   glm::vec3 m_CameraUp;
   glm::vec3 m_CameraRight;
+
+  struct ProjectionMetrics {
+    
+    float Near;
+    float Far;
+
+    // Ortho specific
+    float Left, Right, Bottom, Top;
+
+    // Perspective specific
+    float FovRadians, AspectRatio;
+
+  };
+
+  ProjectionType m_ProjectionType {ProjectionType::NotSet};
+  ProjectionMetrics m_ProjectionMetrics;
 };
 
 #endif
