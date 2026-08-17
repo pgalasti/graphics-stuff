@@ -14,11 +14,14 @@ public:
   OpenGLCamera(float initPosX = 0.0f, float initPosY = 0.0f, float initPosZ = 0.0f);
   ~OpenGLCamera() override = default;
 
+  void Move(Camera::Direction direction, float step) override;
+
   glm::mat4 Apply() override;
 
-private:
+protected:
+  void OnTargetChanged() override;
 
-  // Position/target/up live in the base now
+private:
 
   // Keeping as members so we don't have to construct new objects per apply call
   glm::mat4 m_LookAt;
