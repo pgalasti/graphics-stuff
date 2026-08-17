@@ -4,7 +4,7 @@
 namespace GStuff::General {
 
 enum class CameraDirection {
-  Forward, Backward, Left, Right
+  Forward, Backward, Left, Right, Up, Down
 };
 
 template <typename ViewType, typename VecType, typename T = float>

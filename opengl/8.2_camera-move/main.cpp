@@ -196,6 +196,10 @@ void handleInput(GLFWwindow* pWindow) {
     camera.Move(CameraDirection::Left, cameraSpeed);
   } else if(glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS) {
     camera.Move(CameraDirection::Right, cameraSpeed);
+  } else if(glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    camera.Move(CameraDirection::Up, cameraSpeed);
+  } else if(glfwGetKey(pWindow, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+    camera.Move(CameraDirection::Down, cameraSpeed);
   }
 }
 

@@ -23,6 +23,8 @@ protected:
 
 private:
 
+  void UpdateBasis();
+
   // Keeping as members so we don't have to construct new objects per apply call
   glm::mat4 m_LookAt;
   glm::vec3 m_CameraDirection;
