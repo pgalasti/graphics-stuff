@@ -1,3 +1,4 @@
+#include "general/General.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "general/ModelLoader.h"
@@ -42,6 +43,7 @@ constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
 
 OpenGLCamera camera(0.0f, 0.0f, 3);
+FrameStatf g_FrameStat;
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
@@ -124,6 +126,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   program.Activate();
 
   while(!glfwWindowShouldClose(pWindow)) {
+    g_FrameStat.update(glfwGetTime());
+    
     handleInput(pWindow);
     glfwPollEvents();
 
@@ -187,7 +191,8 @@ void handleInput(GLFWwindow* pWindow) {
     glfwSetWindowShouldClose(pWindow, true);
   }
 
-  constexpr float cameraSpeed {0.001f};
+  constexpr float speed {2.50f};
+  float cameraSpeed {speed*g_FrameStat.DeltaTime};
   if(glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS) {
     camera.Move(CameraDirection::Forward, cameraSpeed);
   } else if(glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS) {
