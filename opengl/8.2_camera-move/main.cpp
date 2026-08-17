@@ -195,15 +195,20 @@ void handleInput(GLFWwindow* pWindow) {
   float cameraSpeed {speed*g_FrameStat.DeltaTime};
   if(glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS) {
     camera.Move(CameraDirection::Forward, cameraSpeed);
-  } else if(glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS) {
+  } 
+  if(glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS) {
     camera.Move(CameraDirection::Backward, cameraSpeed);
-  } else if(glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS) {
+  } 
+  if(glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS) {
     camera.Move(CameraDirection::Left, cameraSpeed);
-  } else if(glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS) {
+  } 
+  if(glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS) {
     camera.Move(CameraDirection::Right, cameraSpeed);
-  } else if(glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
+  } 
+  if(glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
     camera.Move(CameraDirection::Up, cameraSpeed);
-  } else if(glfwGetKey(pWindow, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+  } 
+  if(glfwGetKey(pWindow, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
     camera.Move(CameraDirection::Down, cameraSpeed);
   }
 }
