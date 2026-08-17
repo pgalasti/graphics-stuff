@@ -18,6 +18,7 @@ public:
   ~OpenGLCamera() override = default;
 
   void Move(Camera::Direction direction, float step) override;
+  void Rotate(Camera::Rotation rotation, float angle) override;
 
   glm::mat4 ApplyView() override;
   glm::mat4 Projection() override;

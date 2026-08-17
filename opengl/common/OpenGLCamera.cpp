@@ -88,3 +88,7 @@ glm::mat4 OpenGLCamera::Projection() {
   }
   throw std::runtime_error("Projection Type (Orthogonal/Perspective) is in an invalid state!");
 }
+
+void OpenGLCamera::Rotate(Camera::Rotation rotation, float angle) {
+
+}

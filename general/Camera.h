@@ -7,11 +7,16 @@ enum class CameraDirection {
   Forward, Backward, Left, Right, Up, Down
 };
 
+enum class CameraRotation {
+  Pitch, Yaw, Roll
+};
+
 template <typename ViewType, typename VecType, typename T = float>
 class Camera {
 public:
 
  using Direction = CameraDirection;
+ using Rotation = CameraRotation;
 
  // Should have a specification for whatever viewport this is but I can do that later
  virtual ~Camera() = default;
@@ -22,6 +27,7 @@ public:
 
  // Maybe I should make this a vector value insead of direction with a scalar?
  virtual void Move(Direction direction, T step) = 0;
+ virtual void Rotate(Rotation rotation, T angle) = 0;
 
  virtual ViewType ApplyView() = 0;
  virtual ViewType Projection() = 0;
@@ -30,7 +36,6 @@ public:
  virtual void SetOrthogonal(T left, T right, T bottom, T top, T near, T far) = 0;
  virtual void SetPerspective(T fovRadians, T aspectRatio, T near, T far) = 0;
 
- // I can get fancy with angle later
 
 protected:
  Camera(T initPosX = T{}, T initPosY = T{}, T initPosZ = T{})
