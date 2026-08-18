@@ -21,6 +21,13 @@ concept HasUVMembers = requires(VertexType vertex) {
   vertex.v;
 };
 
+template <typename VertexType>
+concept HasNormalMembers = requires(VertexType vertex) {
+  vertex.nX;
+  vertex.nY;
+  vertex.nZ;
+};
+
 
 template <typename VertexType>
 class VertexLoader {
@@ -39,11 +46,20 @@ public:
     XYZ = 4,
     XYZUV = 5,
     XYZRGB = 6,
-    XYZUVRGB = 7
+    XYZUVRGB = 7,
+    XYN = 8,
+    XYNUV = 9,
+    XYNRGB = 10,
+    XYNUVRGB = 11,
+    XYZN = 12,
+    XYZNUV = 13,
+    XYZNRGB = 14,
+    XYZNUVRGB = 15
   };
 
   static constexpr LoadOptions LOAD_INDICES { 0x0001 };
   static constexpr LoadOptions LOAD_UV      { 0x0002 };
+  static constexpr LoadOptions LOAD_NORMALS { 0x0004 };
 
   VertexLoader(const Format vertex_format_input) : m_Format{vertex_format_input} {};
   virtual ~VertexLoader() = default;
@@ -54,14 +70,17 @@ protected:
   
   // Kind of ugly. Will need to update these per type but will do for now
   bool IsCoordinateType() const {
-    return m_Format >= Format::XY && m_Format <= Format::XYZUVRGB;
+    return m_Format >= Format::XY && m_Format <= Format::XYZNUVRGB;
   }
+  // The Format values encode attributes bitwise: 0x1 = UV, 0x2 = RGB, 0x4 = Z, 0x8 = normals
   bool IsCoordinates3D() const {
-    return m_Format >= Format::XYZ && m_Format <= Format::XYZUVRGB;
+    return (static_cast<unsigned int>(m_Format) & 0x4u) != 0u;
   }
-  // The Format values encode attributes bitwise: 0x1 = UV, 0x2 = RGB, 0x4 = Z
   bool HasTextureCoordinates() const {
     return (static_cast<unsigned int>(m_Format) & 0x1u) != 0u;
+  }
+  bool HasNormals() const {
+    return (static_cast<unsigned int>(m_Format) & 0x8u) != 0u;
   }
 };
 
@@ -85,16 +104,22 @@ public:
 
     VertexData vertexData;
     TextureCoordData textureCoords;
+    NormalData normals;
     CornerData corners;
 
-    const bool wantTextureCoords {(loadOptions & Base::LOAD_UV) != 0uL};
-    if(wantTextureCoords && !this->HasTextureCoordinates()) {
+    FaceContext context;
+    context.WantTextureCoords = (loadOptions & Base::LOAD_UV) != 0uL;
+    context.WantNormals       = (loadOptions & Base::LOAD_NORMALS) != 0uL;
+
+    if(context.WantTextureCoords && !this->HasTextureCoordinates()) {
       std::cerr << "LOAD_UV requested but the vertex format declares no texture coordinates" << std::endl;
     }
+    if(context.WantNormals && !this->HasNormals()) {
+      std::cerr << "LOAD_NORMALS requested but the vertex format declares no normals" << std::endl;
+    }
 
-    // Faces have to be read to pair positions with their texture coordinates, even when
-    // the caller did not ask for an index buffer
-    const bool readFaces {wantTextureCoords || (loadOptions & Base::LOAD_INDICES)};
+    const bool wantAttributes {context.WantTextureCoords || context.WantNormals};
+    const bool readFaces {wantAttributes || (loadOptions & Base::LOAD_INDICES)};
 
     std::string line;
     while(std::getline(file, line)) {
@@ -114,22 +139,32 @@ public:
           continue;
         }
         ProcessVertexLine(vertexData, tokens);
-	continue;
-      } else if(wantTextureCoords && tokens.front() == VERTEX_TEXTURE_COORD_TOKEN) {
+        continue;
+      } else if(context.WantTextureCoords && tokens.front() == VERTEX_TEXTURE_COORD_TOKEN) {
         if(tokens.size() < 2uz) {
           std::cerr << "Malformed texture coordinate line, skipping: " << line << std::endl;
           continue;
         }
         ProcessTextureCoordLine(textureCoords, tokens);
         continue;
+      } else if(context.WantNormals && tokens.front() == VERTEX_NORMAL_TOKEN) {
+        if(tokens.size() < 4uz) {
+          std::cerr << "Malformed normal line, skipping: " << line << std::endl;
+          continue;
+        }
+        ProcessNormalLine(normals, tokens);
+        continue;
       } else if(readFaces && tokens.front() == FACE_TOKEN) {
-        ProcessFaceLine(corners, tokens, vertexData.size(), textureCoords.size());
+        context.VertexCount       = vertexData.size();
+        context.TextureCoordCount = textureCoords.size();
+        context.NormalCount       = normals.size();
+        ProcessFaceLine(corners, tokens, context);
         continue;
       }
 
     }
 
-    if(!wantTextureCoords) {
+    if(!wantAttributes) {
       IndexData indices;
       if(loadOptions & Base::LOAD_INDICES) {
         indices.reserve(corners.size());
@@ -140,11 +175,14 @@ public:
       return {vertexData, indices};
     }
 
-    if(textureCoords.empty()) {
+    if(context.WantTextureCoords && textureCoords.empty()) {
       std::cerr << "Format requests texture coordinates but the file declares none" << std::endl;
     }
+    if(context.WantNormals && normals.empty()) {
+      std::cerr << "Format requests normals but the file declares none" << std::endl;
+    }
 
-    return BuildTexturedModel(vertexData, textureCoords, corners, loadOptions);
+    return BuildIndexedModel(vertexData, textureCoords, normals, corners, loadOptions);
   }
 
 private:
@@ -152,7 +190,9 @@ private:
   struct FaceCorner {
     unsigned int Position     {};
     unsigned int TextureCoord {};
+    unsigned int Normal       {};
     bool HasTextureCoord      {false};
+    bool HasNormal            {false};
   };
 
   struct UVCoord {
@@ -160,7 +200,23 @@ private:
     float v {};
   };
 
+  struct NormalVector {
+    float x {};
+    float y {};
+    float z {};
+  };
+
+  // What the face lines are allowed to reference, and which attributes we actually collected
+  struct FaceContext {
+    std::size_t VertexCount       {};
+    std::size_t TextureCoordCount {};
+    std::size_t NormalCount       {};
+    bool WantTextureCoords        {false};
+    bool WantNormals              {false};
+  };
+
   using TextureCoordData = std::vector<UVCoord>;
+  using NormalData       = std::vector<NormalVector>;
   using CornerData       = std::vector<FaceCorner>;
 
   static constexpr std::string_view COMMENT_TOKEN                {"#"};
@@ -210,6 +266,13 @@ private:
     textureCoords.push_back({u, v});
   }
 
+  void ProcessNormalLine(NormalData& normals, const std::vector<std::string>& tokens) const {
+    const float x {std::stof(tokens[1])};
+    const float y {std::stof(tokens[2])};
+    const float z {std::stof(tokens[3])};
+    normals.push_back({x, y, z});
+  }
+
   bool ParseIndexField(std::string_view field, std::size_t declared, unsigned int& result) const {
     if(field.empty()) {
       return false;
@@ -229,9 +292,9 @@ private:
     return true;
   }
 
-  bool ParseCorner(const std::string& corner, std::size_t vertexCount, std::size_t textureCoordCount, FaceCorner& result) const {
+  bool ParseCorner(const std::string& corner, const FaceContext& context, FaceCorner& result) const {
     const auto firstSlash {corner.find('/')};
-    if(!ParseIndexField(std::string_view(corner).substr(0uz, firstSlash), vertexCount, result.Position)) {
+    if(!ParseIndexField(std::string_view(corner).substr(0uz, firstSlash), context.VertexCount, result.Position)) {
       return false;
     }
 
@@ -241,18 +304,30 @@ private:
 
     const auto secondSlash {corner.find('/', firstSlash + 1uz)};
     const auto length {secondSlash == std::string::npos ? std::string::npos : secondSlash - firstSlash - 1uz};
-    const auto field {std::string_view(corner).substr(firstSlash + 1uz, length)};
+    const auto textureField {std::string_view(corner).substr(firstSlash + 1uz, length)};
 
-    result.HasTextureCoord = ParseIndexField(field, textureCoordCount, result.TextureCoord);
+    if(context.WantTextureCoords) {
+      result.HasTextureCoord = ParseIndexField(textureField, context.TextureCoordCount, result.TextureCoord);
+    }
+
+    if(secondSlash == std::string::npos) {
+      return true;
+    }
+
+    const auto normalField {std::string_view(corner).substr(secondSlash + 1uz)};
+    if(context.WantNormals) {
+      result.HasNormal = ParseIndexField(normalField, context.NormalCount, result.Normal);
+    }
+
     return true;
   }
 
-  void ProcessFaceLine(CornerData& corners, const std::vector<std::string>& tokens, std::size_t vertexCount, std::size_t textureCoordCount) const {
+  void ProcessFaceLine(CornerData& corners, const std::vector<std::string>& tokens, const FaceContext& context) const {
     CornerData faceCorners;
     faceCorners.reserve(tokens.size() - 1uz);
     for(auto it {tokens.begin() + 1}; it != tokens.end(); ++it) {
       FaceCorner corner;
-      if(!ParseCorner(*it, vertexCount, textureCoordCount, corner)) {
+      if(!ParseCorner(*it, context, corner)) {
         std::cerr << "Malformed face corner, skipping face: " << *it << std::endl;
         return;
       }
@@ -271,29 +346,49 @@ private:
     }
   }
 
-  static std::uint64_t CornerKey(const FaceCorner& corner) {
-    const std::uint64_t textureCoord {corner.HasTextureCoord ? corner.TextureCoord : 0xFFFFFFFFuLL};
-    return (static_cast<std::uint64_t>(corner.Position) << 32) | textureCoord;
+  struct CornerKey {
+    unsigned int Position     {};
+    unsigned int TextureCoord {};
+    unsigned int Normal       {};
+
+    bool operator==(const CornerKey& other) const = default;
+  };
+
+  struct CornerKeyHash {
+    std::size_t operator()(const CornerKey& key) const {
+      std::size_t hash {std::hash<unsigned int>{}(key.Position)};
+      hash ^= std::hash<unsigned int>{}(key.TextureCoord) + 0x9e3779b9uz + (hash << 6) + (hash >> 2);
+      hash ^= std::hash<unsigned int>{}(key.Normal) + 0x9e3779b9uz + (hash << 6) + (hash >> 2);
+      return hash;
+    }
+  };
+
+  static constexpr unsigned int UNUSED_ATTRIBUTE {0xFFFFFFFFu};
+
+  static CornerKey MakeCornerKey(const FaceCorner& corner) {
+    return {corner.Position,
+            corner.HasTextureCoord ? corner.TextureCoord : UNUSED_ATTRIBUTE,
+            corner.HasNormal ? corner.Normal : UNUSED_ATTRIBUTE};
   }
 
-  ModelData BuildTexturedModel(const VertexData& positions, const TextureCoordData& textureCoords,
-                               const CornerData& corners, LoadOptions loadOptions) const {
+  ModelData BuildIndexedModel(const VertexData& positions, const TextureCoordData& textureCoords,
+                              const NormalData& normals, const CornerData& corners, LoadOptions loadOptions) const {
     VertexData vertexData;
     IndexData indices;
     vertexData.reserve(corners.size());
     indices.reserve(corners.size());
 
-    std::unordered_map<std::uint64_t, unsigned int> emitted;
+    std::unordered_map<CornerKey, unsigned int, CornerKeyHash> emitted;
 
     for(auto triangle {0uz}; triangle + 2uz < corners.size(); triangle += 3uz) {
-      if(!TriangleInRange(corners, triangle, positions.size(), textureCoords.size())) {
+      if(!TriangleInRange(corners, triangle, positions.size(), textureCoords.size(), normals.size())) {
         std::cerr << "Face references an out of range vertex, skipping triangle" << std::endl;
         continue;
       }
 
       for(auto i {triangle}; i < triangle + 3uz; ++i) {
         const auto& corner {corners[i]};
-        const auto key {CornerKey(corner)};
+        const auto key {MakeCornerKey(corner)};
 
         if(const auto found {emitted.find(key)}; found != emitted.end()) {
           indices.push_back(found->second);
@@ -305,6 +400,13 @@ private:
           if(corner.HasTextureCoord) {
             vertex.u = textureCoords[corner.TextureCoord].u;
             vertex.v = textureCoords[corner.TextureCoord].v;
+          }
+        }
+        if constexpr (HasNormalMembers<VertexType>) {
+          if(corner.HasNormal) {
+            vertex.nX = normals[corner.Normal].x;
+            vertex.nY = normals[corner.Normal].y;
+            vertex.nZ = normals[corner.Normal].z;
           }
         }
 
@@ -327,12 +429,16 @@ private:
     return {expanded, IndexData{}};
   }
 
-  bool TriangleInRange(const CornerData& corners, std::size_t offset, std::size_t vertexCount, std::size_t textureCoordCount) const {
+  bool TriangleInRange(const CornerData& corners, std::size_t offset, std::size_t vertexCount,
+                       std::size_t textureCoordCount, std::size_t normalCount) const {
     for(auto i {offset}; i < offset + 3uz; ++i) {
       if(corners[i].Position >= vertexCount) {
         return false;
       }
       if(corners[i].HasTextureCoord && corners[i].TextureCoord >= textureCoordCount) {
+        return false;
+      }
+      if(corners[i].HasNormal && corners[i].Normal >= normalCount) {
         return false;
       }
     }

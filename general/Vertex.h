@@ -24,6 +24,16 @@ struct Vertex3DUV {
 };
 
 template <typename T>
+struct Vertex3DNUV {
+  union {
+    T vals[8] {};
+    struct {
+      T x, y, z, nX, nY, nZ, u, v;
+    };
+  };
+};
+
+template <typename T>
 struct Vertex3DRGB {
   union {
     T vals[6] {};
@@ -34,11 +44,32 @@ struct Vertex3DRGB {
 };
 
 template <typename T>
+struct Vertex3DNRGB {
+  union {
+    T vals[9] {};
+    struct {
+      T x, y, z, nX, nY, nZ, r, g, b;
+    };
+  };
+};
+
+
+template <typename T>
 struct Vertex3DRGBUV {
   union {
     T vals[8] {};
     struct {
       T x, y, z, r, g, b, u, v;
+    };
+  };
+};
+
+template <typename T>
+struct Vertex3DNRGBUV {
+  union {
+    T vals[11] {};
+    struct {
+      T x, y, z, nX, nY, nZ, r, g, b, u, v;
     };
   };
 };
