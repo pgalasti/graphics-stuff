@@ -27,7 +27,8 @@ public:
 
  // Maybe I should make this a vector value insead of direction with a scalar?
  virtual void Move(Direction direction, T step) = 0;
- virtual void Rotate(Rotation rotation, T angle) = 0;
+ virtual void Rotate(Rotation rotation, T angleOffset) = 0;
+ virtual void Rotate(T angleXOffset, T angleYOffset) = 0;
 
  virtual ViewType ApplyView() = 0;
  virtual ViewType Projection() = 0;

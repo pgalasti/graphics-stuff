@@ -100,6 +100,19 @@ void OpenGLCamera::Rotate(Camera::Rotation rotation, float angleOffset) {
     break;
   }
 
+  UpdateRotationalFront();
+}
+
+void OpenGLCamera::Rotate(float angleXOffset, float angleYOffset) {
+
+  m_DirectionMetrics.Yaw   += angleXOffset;
+  m_DirectionMetrics.Pitch += angleYOffset;
+
+  UpdateRotationalFront();
+}
+
+void OpenGLCamera::UpdateRotationalFront() {
+  
   // Maybe this can be a value determined by a setter?
   if(m_DirectionMetrics.Pitch > 89.0f) {
     m_DirectionMetrics.Pitch = 89.0f;

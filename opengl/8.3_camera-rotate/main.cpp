@@ -35,7 +35,6 @@ using namespace GStuff::General;
 
 using ModelLoader = WavefrontVertexLoader<Vertex3DRGBf>;
 
-
 void handleInput(GLFWwindow* pWindow);
 void addColors(ModelLoader::VertexData& vertices);
 void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos);
@@ -47,7 +46,7 @@ constexpr float FAR  {1000.0f};
 constexpr float ASPECT       {static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT)};
 constexpr float ORTHO_HEIGHT {6.0f}; // World units visible vertically
 
-OpenGLCamera camera(0.0f, 0.0f, 3);
+OpenGLCamera camera(0.0f, 0.0f, 3.0f);
 FrameStatf g_FrameStat;
 
 float lastX{}, lastY{};
@@ -120,6 +119,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
     std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
   };
+
   ObjID VAO, VBO, EBO; 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -198,8 +198,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     SetTransformation(program.ProgramID(), "model", modelMtx);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     
-    
-    
     glBindVertexArray(0);
 
     glfwSwapBuffers(pWindow);
@@ -272,8 +270,8 @@ void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos) {
   xOffset *= sensitivity;
   yOffset *= sensitivity;
 
-  // A bit wasteful for two different calls but I can maybe make this better in the future
-  camera.Rotate(OpenGLCamera::Rotation::Pitch, yOffset);
-  camera.Rotate(OpenGLCamera::Rotation::Yaw, xOffset);
+  camera.Rotate(xOffset, yOffset);
+  //camera.Rotate(OpenGLCamera::Rotation::Pitch, yOffset);
+  //camera.Rotate(OpenGLCamera::Rotation::Yaw, xOffset);
 
 }

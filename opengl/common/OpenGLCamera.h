@@ -19,6 +19,7 @@ public:
 
   void Move(Camera::Direction direction, float step) override;
   void Rotate(Camera::Rotation rotation, float angle) override;
+  void Rotate(float angleXOffset, float angleYOffset) override;
 
   glm::mat4 ApplyView() override;
   glm::mat4 Projection() override;
@@ -33,6 +34,7 @@ protected:
 private:
 
   void UpdateBasis();
+  void UpdateRotationalFront();
 
   struct ProjectionMetrics {
     
