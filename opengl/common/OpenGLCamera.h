@@ -34,12 +34,6 @@ private:
 
   void UpdateBasis();
 
-  // Keeping as members so we don't have to construct new objects per apply call
-  glm::mat4 m_LookAt;
-  glm::vec3 m_CameraDirection;
-  glm::vec3 m_CameraUp;
-  glm::vec3 m_CameraRight;
-
   struct ProjectionMetrics {
     
     float Near;
@@ -53,8 +47,21 @@ private:
 
   };
 
+  struct DirectionMetrics {
+    float Pitch {};
+    float Yaw   {-90.0f};
+    float Roll  {};
+  };
+
+  // Keeping as members so we don't have to construct new objects per apply call
+  glm::mat4 m_LookAt;
+  glm::vec3 m_CameraDirection;
+  glm::vec3 m_CameraUp;
+  glm::vec3 m_CameraRight;
+
   ProjectionType m_ProjectionType {ProjectionType::NotSet};
   ProjectionMetrics m_ProjectionMetrics;
+  DirectionMetrics m_DirectionMetrics;
 };
 
 #endif

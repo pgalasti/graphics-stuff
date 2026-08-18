@@ -89,6 +89,27 @@ glm::mat4 OpenGLCamera::Projection() {
   throw std::runtime_error("Projection Type (Orthogonal/Perspective) is in an invalid state!");
 }
 
-void OpenGLCamera::Rotate(Camera::Rotation rotation, float angle) {
+void OpenGLCamera::Rotate(Camera::Rotation rotation, float angleOffset) {
+
+  switch (rotation) {
+  case Camera::Rotation::Pitch:
+    m_DirectionMetrics.Pitch += angleOffset;
+    break;
+  case Camera::Rotation::Yaw:
+    m_DirectionMetrics.Yaw += angleOffset;
+    break;
+  }
+
+  // Maybe this can be a value determined by a setter?
+  if(m_DirectionMetrics.Pitch > 89.0f) {
+    m_DirectionMetrics.Pitch = 89.0f;
+  } else if(m_DirectionMetrics.Pitch < -89.0f) {
+    m_DirectionMetrics.Pitch = -89.0f;
+  }
+
+  m_CameraFront.x = std::cos(glm::radians(m_DirectionMetrics.Yaw)) * std::cos(glm::radians(m_DirectionMetrics.Pitch));
+  m_CameraFront.y = std::sin(glm::radians(m_DirectionMetrics.Pitch));
+  m_CameraFront.z = std::sin(glm::radians(m_DirectionMetrics.Yaw)) * std::cos(glm::radians(m_DirectionMetrics.Pitch));
+  m_CameraFront = glm::normalize(m_CameraFront);
 
 }

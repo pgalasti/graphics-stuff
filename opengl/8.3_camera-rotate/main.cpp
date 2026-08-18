@@ -38,6 +38,7 @@ using ModelLoader = WavefrontVertexLoader<Vertex3DRGBf>;
 
 void handleInput(GLFWwindow* pWindow);
 void addColors(ModelLoader::VertexData& vertices);
+void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos);
 
 constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
@@ -48,6 +49,8 @@ constexpr float ORTHO_HEIGHT {6.0f}; // World units visible vertically
 
 OpenGLCamera camera(0.0f, 0.0f, 3);
 FrameStatf g_FrameStat;
+
+float lastX{}, lastY{};
 
 bool doOrtho{false};
 
@@ -76,6 +79,9 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     glfwTerminate();
     return 1;
   }
+
+  glfwSetInputMode(pWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(pWindow, mouseEventCallback);
 
   glfwMakeContextCurrent(pWindow);
   glfwSwapInterval(0); // Attempt to uncap VSync
@@ -245,4 +251,29 @@ void addColors(ModelLoader::VertexData& vertices) {
     vertex.g = distribution(gen);
     vertex.b = distribution(gen);
   }
+}
+
+void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos) {
+
+  static bool firstMouse{true};
+  if(firstMouse) {
+    lastX = xPos;
+    lastY = yPos;
+    firstMouse = false;
+  }
+
+  float xOffset {static_cast<float>(xPos - lastX)};
+  float yOffset {static_cast<float>(lastY - yPos)}; // Reversed: screen y grows downward
+
+  lastX = xPos;
+  lastY = yPos;
+
+  constexpr float sensitivity {0.1f};
+  xOffset *= sensitivity;
+  yOffset *= sensitivity;
+
+  // A bit wasteful for two different calls but I can maybe make this better in the future
+  camera.Rotate(OpenGLCamera::Rotation::Pitch, yOffset);
+  camera.Rotate(OpenGLCamera::Rotation::Yaw, xOffset);
+
 }
