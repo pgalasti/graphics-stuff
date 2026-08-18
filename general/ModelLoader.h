@@ -10,8 +10,16 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <unordered_map>
+#include <cstdint>
 
 namespace GStuff::General {
+
+template <typename VertexType>
+concept HasUVMembers = requires(VertexType vertex) {
+  vertex.u;
+  vertex.v;
+};
 
 
 template <typename VertexType>
@@ -35,6 +43,7 @@ public:
   };
 
   static constexpr LoadOptions LOAD_INDICES { 0x0001 };
+  static constexpr LoadOptions LOAD_UV      { 0x0002 };
 
   VertexLoader(const Format vertex_format_input) : m_Format{vertex_format_input} {};
   virtual ~VertexLoader() = default;
@@ -49,6 +58,10 @@ protected:
   }
   bool IsCoordinates3D() const {
     return m_Format >= Format::XYZ && m_Format <= Format::XYZUVRGB;
+  }
+  // The Format values encode attributes bitwise: 0x1 = UV, 0x2 = RGB, 0x4 = Z
+  bool HasTextureCoordinates() const {
+    return (static_cast<unsigned int>(m_Format) & 0x1u) != 0u;
   }
 };
 
@@ -71,7 +84,17 @@ public:
     std::ifstream file {Open(path)};
 
     VertexData vertexData;
-    IndexData indices; 
+    TextureCoordData textureCoords;
+    CornerData corners;
+
+    const bool wantTextureCoords {(loadOptions & Base::LOAD_UV) != 0uL};
+    if(wantTextureCoords && !this->HasTextureCoordinates()) {
+      std::cerr << "LOAD_UV requested but the vertex format declares no texture coordinates" << std::endl;
+    }
+
+    // Faces have to be read to pair positions with their texture coordinates, even when
+    // the caller did not ask for an index buffer
+    const bool readFaces {wantTextureCoords || (loadOptions & Base::LOAD_INDICES)};
 
     std::string line;
     while(std::getline(file, line)) {
@@ -92,16 +115,53 @@ public:
         }
         ProcessVertexLine(vertexData, tokens);
 	continue;
-      } else if((loadOptions & Base::LOAD_INDICES) && tokens.front() == FACE_TOKEN) {
-        ProcessFaceLine(indices, tokens);
+      } else if(wantTextureCoords && tokens.front() == VERTEX_TEXTURE_COORD_TOKEN) {
+        if(tokens.size() < 2uz) {
+          std::cerr << "Malformed texture coordinate line, skipping: " << line << std::endl;
+          continue;
+        }
+        ProcessTextureCoordLine(textureCoords, tokens);
+        continue;
+      } else if(readFaces && tokens.front() == FACE_TOKEN) {
+        ProcessFaceLine(corners, tokens, vertexData.size(), textureCoords.size());
         continue;
       }
 
     }
-    return {vertexData, indices};
+
+    if(!wantTextureCoords) {
+      IndexData indices;
+      if(loadOptions & Base::LOAD_INDICES) {
+        indices.reserve(corners.size());
+        for(const auto& corner : corners) {
+          indices.push_back(corner.Position);
+        }
+      }
+      return {vertexData, indices};
+    }
+
+    if(textureCoords.empty()) {
+      std::cerr << "Format requests texture coordinates but the file declares none" << std::endl;
+    }
+
+    return BuildTexturedModel(vertexData, textureCoords, corners, loadOptions);
   }
 
 private:
+
+  struct FaceCorner {
+    unsigned int Position     {};
+    unsigned int TextureCoord {};
+    bool HasTextureCoord      {false};
+  };
+
+  struct UVCoord {
+    float u {};
+    float v {};
+  };
+
+  using TextureCoordData = std::vector<UVCoord>;
+  using CornerData       = std::vector<FaceCorner>;
 
   static constexpr std::string_view COMMENT_TOKEN                {"#"};
   static constexpr std::string_view VERTEX_TOKEN                 {"v"};
@@ -144,28 +204,139 @@ private:
     vertexData.push_back(vertex);
   }
 
-  unsigned int ParsePositionIndex(const std::string& corner) const {
-    const auto field {corner.substr(0uz, corner.find('/'))};
-    return static_cast<unsigned int>(std::stoul(field) - 1uL);
+  void ProcessTextureCoordLine(TextureCoordData& textureCoords, const std::vector<std::string>& tokens) const {
+    const float u {std::stof(tokens[1])};
+    const float v {tokens.size() > 2uz ? std::stof(tokens[2]) : 0.0f};
+    textureCoords.push_back({u, v});
   }
 
-  void ProcessFaceLine(IndexData& indices, const std::vector<std::string>& tokens) const {
-    IndexData corners;
-    corners.reserve(tokens.size() - 1uz);
-    for(auto it {tokens.begin() + 1}; it != tokens.end(); ++it) {
-      corners.push_back(ParsePositionIndex(*it));
+  bool ParseIndexField(std::string_view field, std::size_t declared, unsigned int& result) const {
+    if(field.empty()) {
+      return false;
     }
 
-    if(corners.size() < 3uz) {
+    const long value {std::stol(std::string(field))};
+    if(value == 0L) {
+      return false;
+    }
+
+    const long resolved {value > 0L ? value - 1L : static_cast<long>(declared) + value};
+    if(resolved < 0L) {
+      return false;
+    }
+
+    result = static_cast<unsigned int>(resolved);
+    return true;
+  }
+
+  bool ParseCorner(const std::string& corner, std::size_t vertexCount, std::size_t textureCoordCount, FaceCorner& result) const {
+    const auto firstSlash {corner.find('/')};
+    if(!ParseIndexField(std::string_view(corner).substr(0uz, firstSlash), vertexCount, result.Position)) {
+      return false;
+    }
+
+    if(firstSlash == std::string::npos) {
+      return true;
+    }
+
+    const auto secondSlash {corner.find('/', firstSlash + 1uz)};
+    const auto length {secondSlash == std::string::npos ? std::string::npos : secondSlash - firstSlash - 1uz};
+    const auto field {std::string_view(corner).substr(firstSlash + 1uz, length)};
+
+    result.HasTextureCoord = ParseIndexField(field, textureCoordCount, result.TextureCoord);
+    return true;
+  }
+
+  void ProcessFaceLine(CornerData& corners, const std::vector<std::string>& tokens, std::size_t vertexCount, std::size_t textureCoordCount) const {
+    CornerData faceCorners;
+    faceCorners.reserve(tokens.size() - 1uz);
+    for(auto it {tokens.begin() + 1}; it != tokens.end(); ++it) {
+      FaceCorner corner;
+      if(!ParseCorner(*it, vertexCount, textureCoordCount, corner)) {
+        std::cerr << "Malformed face corner, skipping face: " << *it << std::endl;
+        return;
+      }
+      faceCorners.push_back(corner);
+    }
+
+    if(faceCorners.size() < 3uz) {
       std::cerr << "Face with fewer than 3 corners, skipping" << std::endl;
       return;
     }
 
-    for(auto i {1uz}; i + 1uz < corners.size(); ++i) {
-      indices.push_back(corners[0uz]);
-      indices.push_back(corners[i]);
-      indices.push_back(corners[i + 1uz]);
+    for(auto i {1uz}; i + 1uz < faceCorners.size(); ++i) {
+      corners.push_back(faceCorners[0uz]);
+      corners.push_back(faceCorners[i]);
+      corners.push_back(faceCorners[i + 1uz]);
     }
+  }
+
+  static std::uint64_t CornerKey(const FaceCorner& corner) {
+    const std::uint64_t textureCoord {corner.HasTextureCoord ? corner.TextureCoord : 0xFFFFFFFFuLL};
+    return (static_cast<std::uint64_t>(corner.Position) << 32) | textureCoord;
+  }
+
+  ModelData BuildTexturedModel(const VertexData& positions, const TextureCoordData& textureCoords,
+                               const CornerData& corners, LoadOptions loadOptions) const {
+    VertexData vertexData;
+    IndexData indices;
+    vertexData.reserve(corners.size());
+    indices.reserve(corners.size());
+
+    std::unordered_map<std::uint64_t, unsigned int> emitted;
+
+    for(auto triangle {0uz}; triangle + 2uz < corners.size(); triangle += 3uz) {
+      if(!TriangleInRange(corners, triangle, positions.size(), textureCoords.size())) {
+        std::cerr << "Face references an out of range vertex, skipping triangle" << std::endl;
+        continue;
+      }
+
+      for(auto i {triangle}; i < triangle + 3uz; ++i) {
+        const auto& corner {corners[i]};
+        const auto key {CornerKey(corner)};
+
+        if(const auto found {emitted.find(key)}; found != emitted.end()) {
+          indices.push_back(found->second);
+          continue;
+        }
+
+        VertexType vertex {positions[corner.Position]};
+        if constexpr (HasUVMembers<VertexType>) {
+          if(corner.HasTextureCoord) {
+            vertex.u = textureCoords[corner.TextureCoord].u;
+            vertex.v = textureCoords[corner.TextureCoord].v;
+          }
+        }
+
+        const auto index {static_cast<unsigned int>(vertexData.size())};
+        vertexData.push_back(vertex);
+        indices.push_back(index);
+        emitted.emplace(key, index);
+      }
+    }
+
+    if(loadOptions & Base::LOAD_INDICES) {
+      return {vertexData, indices};
+    }
+
+    VertexData expanded;
+    expanded.reserve(indices.size());
+    for(const auto index : indices) {
+      expanded.push_back(vertexData[index]);
+    }
+    return {expanded, IndexData{}};
+  }
+
+  bool TriangleInRange(const CornerData& corners, std::size_t offset, std::size_t vertexCount, std::size_t textureCoordCount) const {
+    for(auto i {offset}; i < offset + 3uz; ++i) {
+      if(corners[i].Position >= vertexCount) {
+        return false;
+      }
+      if(corners[i].HasTextureCoord && corners[i].TextureCoord >= textureCoordCount) {
+        return false;
+      }
+    }
+    return true;
   }
 
 };
