@@ -3,6 +3,8 @@
 #include "OpenGLShaders.h"
 #include "Helper.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <stdexcept>
 #include <iostream>
 #include <cstdlib>
@@ -10,6 +12,40 @@
 namespace GStuff::OpenGL {
 
 using namespace GStuff::OpenGL::Helper;
+
+namespace {
+
+ObjID g_CurrentProgram {0};
+
+void BindProgram(ObjID programID) {
+  if(g_CurrentProgram != programID) {
+    glUseProgram(programID);
+    g_CurrentProgram = programID;
+  }
+}
+
+class ScopedBind {
+public:
+  explicit ScopedBind(ObjID programID) : m_Previous{g_CurrentProgram} { BindProgram(programID); }
+  ~ScopedBind() { BindProgram(m_Previous); }
+
+  ScopedBind(const ScopedBind&) = delete;
+  ScopedBind& operator=(const ScopedBind&) = delete;
+
+private:
+  ObjID m_Previous;
+};
+
+int uniformLocationOrWarn(ObjID programID, const std::string& name) {
+  int location {glGetUniformLocation(programID, name.c_str())};
+  if(location == -1) {
+    std::cerr << "Uniform '" << name << "' not found in program " << programID
+              << " (misspelled, or optimized out because it is unused)\n";
+  }
+  return location;
+}
+
+}
 
 OpenGLShader::OpenGLShader(const std::string& path, Shader::ShaderType type)
   : Shader(path, type), m_ShaderID(0) {
@@ -78,30 +114,31 @@ OpenGLProgram::~OpenGLProgram() {
 }
 
 void OpenGLProgram::Activate(bool active) {
-  glUseProgram(active ? m_ProgramID : 0);
+  BindProgram(active ? m_ProgramID : 0);
 }
 
-namespace {
+void OpenGLProgram::SetConstant(const std::string& name, const glm::mat4& matrix) {
+  ScopedBind bind {m_ProgramID};
 
-int uniformLocationOrWarn(ObjID programID, const std::string& name) {
-  int location {glGetUniformLocation(programID, name.c_str())};
-  if(location == -1) {
-    std::cerr << "Uniform '" << name << "' not found in program " << programID
-              << " (misspelled, or optimized out because it is unused)\n";
+  const GLint response { glGetUniformLocation(m_ProgramID, name.c_str()) };
+  if(response < 0) {
+    throw std::runtime_error("Received invalid response upon setting transformation matrix with glGetUniformLocation");
   }
-  return location;
-}
 
+  glUniformMatrix4fv(response, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 void OpenGLProgram::SetConstant(const std::string& name, const glm::vec3& vec) {
+  ScopedBind bind {m_ProgramID};
   glUniform3f(uniformLocationOrWarn(m_ProgramID, name), vec.x, vec.y, vec.z);
 }
 
 void OpenGLProgram::SetConstant(const std::string& name, int value) {
+  ScopedBind bind {m_ProgramID};
   glUniform1i(uniformLocationOrWarn(m_ProgramID, name), value);
 }
 void OpenGLProgram::SetConstant(const std::string& name, float value) {
+  ScopedBind bind {m_ProgramID};
   glUniform1f(uniformLocationOrWarn(m_ProgramID, name), value);
 }
 

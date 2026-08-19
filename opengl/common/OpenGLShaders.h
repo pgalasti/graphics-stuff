@@ -46,6 +46,7 @@ public:
     return m_ProgramID;
   }
 
+  void SetConstant(const std::string& name, const glm::mat4& matrix) override;
   void SetConstant(const std::string& name, const glm::vec3& vec) override;
   void SetConstant(const std::string& name, int value) override;
   void SetConstant(const std::string& name, float value) override;

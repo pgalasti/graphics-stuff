@@ -49,6 +49,7 @@ public:
   virtual ~Program() = default;
 
   virtual void Activate(bool active = true) = 0;
+  virtual void SetConstant(const std::string& name, const glm::mat4& matrix) = 0;
   virtual void SetConstant(const std::string& name, const glm::vec3& vec) = 0;
   virtual void SetConstant(const std::string& name, int) = 0;
   virtual void SetConstant(const std::string& name, float) = 0;

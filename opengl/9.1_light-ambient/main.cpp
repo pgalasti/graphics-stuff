@@ -173,7 +173,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   camera.Target(0.0f, 0.0f, 0.0f);
   camera.Up(0.0f, 1.0f, 0.0f);
 
-
   if(doOrtho) { 
     constexpr float orthoHalfHeight {ORTHO_HEIGHT*0.5f};
     constexpr float orthoHalfWidth  {orthoHalfHeight*ASPECT};
@@ -183,10 +182,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   }
 
   const glm::mat4 projection { camera.Projection() };
-  objectProgram.Activate();
-  SetTransformation(objectProgram.ProgramID(), "projection", projection);
-  lightProgram.Activate();
-  SetTransformation(lightProgram.ProgramID(), "projection", projection);
+  objectProgram.SetConstant("projection", projection);
+  lightProgram.SetConstant("projection", projection);
 
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
@@ -197,7 +194,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    
-    glm::mat4 lookAt { camera.ApplyView() };
+    const glm::mat4 lookAt { camera.ApplyView() };
     
     // Setup Cube 
     glm::mat4 modelMtx {glm::mat4(1.0f)};
@@ -206,11 +203,11 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
     
     // Draw Cube 
-    objectProgram.Activate();
-    SetTransformation(objectProgram.ProgramID(), "model", modelMtx);
-    SetTransformation(objectProgram.ProgramID(), "view", lookAt);
+    objectProgram.SetConstant("model", modelMtx);
+    objectProgram.SetConstant("view", lookAt);
     objectProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     objectProgram.SetConstant("ambient", 0.25f);
+    objectProgram.Activate();
     glBindVertexArray(cubeVAO);
     glDrawElements(GL_TRIANGLES, cubeIndices.size(), GL_UNSIGNED_INT, 0);
 
@@ -218,14 +215,13 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::mat4(1.0f);
     modelMtx = glm::translate(modelMtx, glm::vec3(1.0f, 1.0f, 0.0f));
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
-    SetTransformation(objectProgram.ProgramID(), "model", modelMtx);
     
     // Draw Sphere 
-    lightProgram.Activate();
-    SetTransformation(lightProgram.ProgramID(), "model", modelMtx);
-    SetTransformation(lightProgram.ProgramID(), "view", lookAt);
+    lightProgram.SetConstant("model", modelMtx);
+    lightProgram.SetConstant("view", lookAt);
     lightProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     lightProgram.SetConstant("intensity", 1.0f);
+    lightProgram.Activate();
     glBindVertexArray(sphereVAO);
     glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
