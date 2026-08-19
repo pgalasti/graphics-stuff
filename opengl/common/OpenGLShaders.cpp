@@ -101,5 +101,8 @@ void OpenGLProgram::SetConstant(const std::string& name, const glm::vec3& vec) {
 void OpenGLProgram::SetConstant(const std::string& name, int value) {
   glUniform1i(uniformLocationOrWarn(m_ProgramID, name), value);
 }
+void OpenGLProgram::SetConstant(const std::string& name, float value) {
+  glUniform1f(uniformLocationOrWarn(m_ProgramID, name), value);
+}
 
 }

@@ -46,8 +46,9 @@ public:
     return m_ProgramID;
   }
 
-  void SetConstant(const std::string& name, const glm::vec3& vec);
-  void SetConstant(const std::string& name, int value);
+  void SetConstant(const std::string& name, const glm::vec3& vec) override;
+  void SetConstant(const std::string& name, int value) override;
+  void SetConstant(const std::string& name, float value) override;
 private:
   void Link();
 

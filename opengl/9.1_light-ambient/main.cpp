@@ -79,6 +79,9 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   }
 
   glfwSetInputMode(pWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  if(glfwRawMouseMotionSupported()) {
+    glfwSetInputMode(pWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+  }
   glfwSetCursorPosCallback(pWindow, mouseEventCallback);
 
   glfwMakeContextCurrent(pWindow);
@@ -99,40 +102,66 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
  
   ModelLoader modelLoader(ModelLoader::Format::XYZNRGB);
   
-  profiler.Start("Loading Model");
-  const ModelLoader::ModelData modelData = modelLoader.Load("./models/cube_unit_uv.obj", ModelLoader::LOAD_INDICES | ModelLoader::LOAD_NORMALS);
+  profiler.Start("Loading Models");
+  const ModelLoader::ModelData cubeData = modelLoader.Load("./models/cube_unit_uv.obj", ModelLoader::LOAD_INDICES | ModelLoader::LOAD_NORMALS);
+  const ModelLoader::ModelData sphereData = modelLoader.Load("./models/sphere.obj", ModelLoader::LOAD_INDICES | ModelLoader::LOAD_NORMALS);
   const auto snapshot {profiler.Stop()};
-  ModelLoader::VertexData vertices{modelData.first};
-  const ModelLoader::IndexData indices{modelData.second};
-  if(vertices.empty() || indices.empty()) {
-    throw std::runtime_error("Unable to load vertices/indices of model!");
+
+  ModelLoader::VertexData cubeVertices{cubeData.first};
+  const ModelLoader::IndexData cubeIndices{cubeData.second};
+  ModelLoader::VertexData sphereVertices{sphereData.first};
+  const ModelLoader::IndexData sphereIndices{sphereData.second};
+
+  if(cubeVertices.empty() || cubeIndices.empty() || sphereVertices.empty() || sphereIndices.empty()) {
+    throw std::runtime_error("Unable to load vertices/indices of models!");
   }
+  addColor(cubeVertices);
 
   std::cout << snapshot << std::endl;
-  std::cout << "Loaded " << vertices.size() << " vertices, " << indices.size() << " indices" << std::endl;
+  std::cout << "Loaded " << cubeVertices.size() + sphereVertices.size() << " vertices, " << cubeIndices.size() + sphereIndices.size() << " indices" << std::endl;
 
-  const std::size_t vertexByteSize{vertices.size()*sizeof(vertices[0])};
-  const std::size_t indexByteSize{indices.size()*sizeof(indices[0])};
+  const std::size_t cubeVertexByteSize{cubeVertices.size()*sizeof(cubeVertices[0])};
+  const std::size_t cubeIndexByteSize{cubeIndices.size()*sizeof(cubeIndices[0])};
+  const std::size_t sphereVertexByteSize{sphereVertices.size()*sizeof(sphereVertices[0])};
+  const std::size_t sphereIndexByteSize{sphereIndices.size()*sizeof(sphereIndices[0])};
 
-  OpenGLProgram program {
+  // I need to implement a constructor without perfect forwarding to reuse a compiled shader..
+  OpenGLProgram objectProgram {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
     std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
   };
+  OpenGLProgram lightProgram {
+    std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
+    std::make_unique<OpenGLShader>("./shaders/fs-light.glsl", Shader::ShaderType::Fragment)
+  };
 
-  ObjID VAO, VBO, EBO; 
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
-  
-  glBindVertexArray(VAO);
-  
-  addColor(vertices);
-  
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertexByteSize, vertices.data(), GL_STATIC_DRAW);
+  ObjID sphereVAO, cubeVAO, 
+	sphereVBO, cubeVBO,
+	sphereEBO, cubeEBO; 
+  glGenVertexArrays(1, &sphereVAO); glGenVertexArrays(1, &cubeVAO);
+  glGenBuffers(1, &sphereVBO); glGenBuffers(1, &cubeVBO);
+  glGenBuffers(1, &sphereEBO); glGenBuffers(1, &cubeEBO);
  
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexByteSize, indices.data(), GL_STATIC_DRAW);
+  // Setup Cube VAO 
+  glBindVertexArray(cubeVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+  glBufferData(GL_ARRAY_BUFFER, cubeVertexByteSize, cubeVertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeEBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndexByteSize, cubeIndices.data(), GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DNRGBf), static_cast<void*>(0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DNRGBf), (void*)(sizeof(float)*3));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DNRGBf), (void*)(sizeof(float)*6));
+  glEnableVertexAttribArray(2);
+
+  // Setup Sphere VAO
+  glBindVertexArray(sphereVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+  glBufferData(GL_ARRAY_BUFFER, sphereVertexByteSize, sphereVertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndexByteSize, sphereIndices.data(), GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3DNRGBf), static_cast<void*>(0));
   glEnableVertexAttribArray(0);
@@ -144,8 +173,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   camera.Target(0.0f, 0.0f, 0.0f);
   camera.Up(0.0f, 1.0f, 0.0f);
 
-  program.Activate();
-  program.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
   if(doOrtho) { 
     constexpr float orthoHalfHeight {ORTHO_HEIGHT*0.5f};
@@ -156,7 +183,10 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   }
 
   const glm::mat4 projection { camera.Projection() };
-  SetTransformation(program.ProgramID(), "projection", projection);
+  objectProgram.Activate();
+  SetTransformation(objectProgram.ProgramID(), "projection", projection);
+  lightProgram.Activate();
+  SetTransformation(lightProgram.ProgramID(), "projection", projection);
 
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
@@ -166,29 +196,50 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   
+    glm::mat4 lookAt { camera.ApplyView() };
     
+    // Setup Cube 
     glm::mat4 modelMtx {glm::mat4(1.0f)};
     modelMtx = glm::translate(modelMtx, glm::vec3(0.0f, 0.0f, 0.0f));
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
     modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
-    SetTransformation(program.ProgramID(), "model", modelMtx);
+    
+    // Draw Cube 
+    objectProgram.Activate();
+    SetTransformation(objectProgram.ProgramID(), "model", modelMtx);
+    SetTransformation(objectProgram.ProgramID(), "view", lookAt);
+    objectProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    objectProgram.SetConstant("ambient", 0.25f);
+    glBindVertexArray(cubeVAO);
+    glDrawElements(GL_TRIANGLES, cubeIndices.size(), GL_UNSIGNED_INT, 0);
 
-    glm::mat4 lookAt { camera.ApplyView() };
-    SetTransformation(program.ProgramID(), "view", lookAt);
-     
-    glBindVertexArray(VAO);
-    program.Activate();
-
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    // Setup Sphere
+    modelMtx = glm::mat4(1.0f);
+    modelMtx = glm::translate(modelMtx, glm::vec3(1.0f, 1.0f, 0.0f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
+    SetTransformation(objectProgram.ProgramID(), "model", modelMtx);
+    
+    // Draw Sphere 
+    lightProgram.Activate();
+    SetTransformation(lightProgram.ProgramID(), "model", modelMtx);
+    SetTransformation(lightProgram.ProgramID(), "view", lookAt);
+    lightProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    lightProgram.SetConstant("intensity", 1.0f);
+    glBindVertexArray(sphereVAO);
+    glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
 
     glfwSwapBuffers(pWindow);
   }
   
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
+  glDeleteVertexArrays(1, &cubeVAO);
+  glDeleteVertexArrays(1, &sphereVAO);
+  glDeleteBuffers(1, &cubeVBO);
+  glDeleteBuffers(1, &sphereVBO);
+  glDeleteBuffers(1, &cubeEBO);
+  glDeleteBuffers(1, &sphereEBO);
   glfwTerminate();
   return 0;
 }
@@ -219,7 +270,7 @@ void handleInput(GLFWwindow* pWindow) {
     camera.Move(CameraDirection::Down, cameraSpeed);
   }
 }
-void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos) {
+void mouseEventCallback([[maybe_unused]]GLFWwindow* pWindow, double xPos, double yPos) {
 
   static bool firstMouse{true};
   if(firstMouse) {
