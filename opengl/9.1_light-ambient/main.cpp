@@ -213,7 +213,9 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
     // Setup Sphere
     modelMtx = glm::mat4(1.0f);
-    modelMtx = glm::translate(modelMtx, glm::vec3(1.0f, 1.0f, 0.0f));
+    modelMtx = glm::translate(modelMtx, glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMtx = glm::translate(modelMtx, glm::vec3(1.0f, 0.0f, 0.0f));
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
     
     // Draw Sphere 
