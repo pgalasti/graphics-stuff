@@ -128,6 +128,17 @@ void OpenGLProgram::SetConstant(const std::string& name, const glm::mat4& matrix
   glUniformMatrix4fv(response, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+void OpenGLProgram::SetConstant(const std::string& name, const glm::mat3& matrix) {
+  ScopedBind bind {m_ProgramID};
+
+  const GLint response { glGetUniformLocation(m_ProgramID, name.c_str()) };
+  if(response < 0) {
+    throw std::runtime_error("Received invalid response upon setting transformation matrix with glGetUniformLocation");
+  }
+
+  glUniformMatrix3fv(response, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
 void OpenGLProgram::SetConstant(const std::string& name, const glm::vec3& vec) {
   ScopedBind bind {m_ProgramID};
   glUniform3f(uniformLocationOrWarn(m_ProgramID, name), vec.x, vec.y, vec.z);
