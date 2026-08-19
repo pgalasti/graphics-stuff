@@ -98,6 +98,8 @@ void OpenGLCamera::Rotate(Camera::Rotation rotation, float angleOffset) {
   case Camera::Rotation::Yaw:
     m_DirectionMetrics.Yaw += angleOffset;
     break;
+  case Camera::Rotation::Roll:
+    throw std::runtime_error("I'm lazy and haven't implemented a need for roll yet");
   }
 
   UpdateRotationalFront();
