@@ -63,11 +63,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   }
 
 #ifndef __APPLE__
-  // Forcing X11 on a Wayland session routes us through XWayland, where
-  // GLFW_CURSOR_DISABLED relies on XGrabPointer and can't reliably confine the
-  // pointer -- the compositor still owns it, so the cursor escapes the window.
-  // The native Wayland backend uses zwp_pointer_constraints_v1 and holds it
-  // properly, so only force X11 when explicitly asked.
   if(std::getenv("GSTUFF_FORCE_X11")) {
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
   }
@@ -96,9 +91,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glfwSetFramebufferSizeCallback(pWindow, []([[maybe_unused]]GLFWwindow* pWindow, int width, int height) { glViewport(0, 0, width, height); });
 
   glewExperimental = GL_TRUE;
-  // GLEW is a GLX-era loader: on the Wayland backend the context is EGL, so its
-  // GLX display query fails with GLEW_ERROR_NO_GLX_DISPLAY even though every
-  // function pointer resolved correctly. Only that one code is survivable.
   if(const GLenum glewStatus {glewInit()};
      glewStatus != GLEW_OK && glewStatus != GLEW_ERROR_NO_GLX_DISPLAY) {
     std::cerr << "Failed to init GLEW: " << glewGetErrorString(glewStatus)
@@ -259,7 +251,13 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glDeleteBuffers(1, &sphereVBO);
   glDeleteBuffers(1, &cubeEBO);
   glDeleteBuffers(1, &sphereEBO);
-  glfwTerminate();
+  
+  // Wayland+NVIDIA segfaults in an internal function wl_display_disconnect() 
+  // on my nvidia drivers so i have this ugly code 
+  if(glfwGetPlatform() != GLFW_PLATFORM_WAYLAND) {
+    glfwTerminate();
+  }
+
   return 0;
 }
 
