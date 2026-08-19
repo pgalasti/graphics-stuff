@@ -9,8 +9,8 @@ My iterative improvements while I mostly read through https://learnopengl.com/
 | C++23 compiler |
 | GLEW | 
 | GLFW 3 |
-| OpenGL |
-| glm, stb |
+| OpenGL (obviously)|
+| glm, stb (I made as submodules)|
 
 ## Installing the libraries
 
