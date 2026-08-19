@@ -212,14 +212,18 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::translate(modelMtx, glm::vec3(0.0f, 0.0f, 0.0f));
     modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
-    
-    // Draw Cube 
+    const glm::mat3 inverseTransposeMtx { glm::transpose(glm::inverse(modelMtx)) };
+
+    // Setup constants
     objectProgram.SetConstant("model", modelMtx);
     objectProgram.SetConstant("view", lookAt);
     objectProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    objectProgram.SetConstant("ambient", 0.20f);
+    objectProgram.SetConstant("ambient", 0.10f);
     objectProgram.SetConstant("lightPosition", lightPosition);
+    objectProgram.SetConstant("inverseTransposeMtx", inverseTransposeMtx);
     objectProgram.Activate();
+    
+    // Draw Cube 
     glBindVertexArray(cubeVAO);
     glDrawElements(GL_TRIANGLES, cubeIndices.size(), GL_UNSIGNED_INT, 0);
 

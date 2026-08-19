@@ -5,6 +5,7 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
 
 uniform mat4 model;
+uniform mat4 inverseTransposeMtx;
 uniform mat4 view;
 uniform mat4 projection;
 
@@ -16,6 +17,6 @@ void main() {
   gl_Position = projection * view * model * vec4(aPos, 1.0f);
   Color = aColor;
 
-  Normal = mat3(transpose(inverse(model)))*aNormal;
+  Normal = mat3(inverseTransposeMtx)*aNormal;
   fragPosition = vec3(model*vec4(aPos, 1.0f));
 }
