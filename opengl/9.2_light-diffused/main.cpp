@@ -98,6 +98,12 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     return 1;
   }
 
+  // On Wayland (and any HiDPI setup) the framebuffer is larger than the window,
+  // and the resize callback doesn't fire at startup, so seed the viewport here.
+  int frameBufferWidth {}, frameBufferHeight {};
+  glfwGetFramebufferSize(pWindow, &frameBufferWidth, &frameBufferHeight);
+  glViewport(0, 0, frameBufferWidth, frameBufferHeight);
+
   glEnable(GL_DEPTH_TEST);
   std::cout << "OpenGL Version Loaded: " << glGetString(GL_VERSION) << std::endl;
 
