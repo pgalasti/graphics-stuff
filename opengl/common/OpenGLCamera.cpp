@@ -31,6 +31,10 @@ glm::mat4 OpenGLCamera::ApplyView() {
   return m_LookAt;
 }
 
+glm::vec3 OpenGLCamera::Position() const {
+  return m_Position;
+}
+
 void OpenGLCamera::Move(Camera::Direction direction, float step) {
   UpdateBasis();
 

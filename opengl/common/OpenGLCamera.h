@@ -23,6 +23,7 @@ public:
 
   glm::mat4 ApplyView() override;
   glm::mat4 Projection() override;
+  glm::vec3 Position() const override;
 
   // Type set by last function called. Maybe a setter could be used later if needed
   void SetOrthogonal(float left, float right, float bottom, float top, float near, float far) override;

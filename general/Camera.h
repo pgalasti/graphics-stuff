@@ -32,6 +32,7 @@ public:
 
  virtual ViewType ApplyView() = 0;
  virtual ViewType Projection() = 0;
+ virtual VecType Position() const = 0;
 
  // If I setup a viewport instance, I may be able to tone these down
  virtual void SetOrthogonal(T left, T right, T bottom, T top, T near, T far) = 0;
