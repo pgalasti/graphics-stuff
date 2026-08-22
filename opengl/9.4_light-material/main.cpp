@@ -8,6 +8,7 @@
 #include "opengl/common/OpenGLShaders.h"
 #include "opengl/common/Texture.h"
 #include "opengl/common/OpenGLCamera.h"
+#include "opengl/common/Lightsources.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -201,6 +202,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     glm::vec3(1.0f, 1.0f, 1.0f)
   };
 
+  LightSources lightSources(&objectProgram);
+ 
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
     
@@ -236,11 +239,12 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     objectProgram.SetConstant("inverseTransposeMtx", inverseTransposeMtx);
 
     // Light stuff
-    objectProgram.SetConstant("cameraPosition", camera.Position());
-    objectProgram.SetConstant("light.position", lightPosition);
-    objectProgram.SetConstant("light.ambient", sphereLightAttributes.ambient); 
-    objectProgram.SetConstant("light.diffuse", sphereLightAttributes.diffuse);
-    objectProgram.SetConstant("light.specular", sphereLightAttributes.specular);
+    lightSources.SetCameraPosition("cameraPosition", camera.Position());
+    lightSources.SetProperty("light.position", lightPosition);
+    lightSources.SetProperty("light.ambient", sphereLightAttributes.ambient);
+    lightSources.SetProperty("light.diffuse", sphereLightAttributes.diffuse);
+    lightSources.SetProperty("light.specular", sphereLightAttributes.specular);
+    lightSources.Apply();
 
     // Material stuff
     objectProgram.SetConstant("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
