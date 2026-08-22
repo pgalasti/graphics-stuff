@@ -195,6 +195,12 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   objectProgram.SetConstant("projection", projection);
   lightProgram.SetConstant("projection", projection);
 
+  Light sphereLightAttributes {
+    glm::vec3(0.1f, 0.10f, 0.1f),
+    glm::vec3(0.50f, 0.50f, 0.5f),
+    glm::vec3(1.0f, 1.0f, 1.0f)
+  };
+
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
     
@@ -232,9 +238,9 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     // Light stuff
     objectProgram.SetConstant("cameraPosition", camera.Position());
     objectProgram.SetConstant("light.position", lightPosition);
-    objectProgram.SetConstant("light.ambient", glm::vec3(0.10f, 0.10f, 0.1f));
-    objectProgram.SetConstant("light.diffuse", glm::vec3(0.50f, 0.50f, 0.5f));
-    objectProgram.SetConstant("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+    objectProgram.SetConstant("light.ambient", sphereLightAttributes.ambient); 
+    objectProgram.SetConstant("light.diffuse", sphereLightAttributes.diffuse);
+    objectProgram.SetConstant("light.specular", sphereLightAttributes.specular);
 
     // Material stuff
     objectProgram.SetConstant("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));

@@ -15,6 +15,12 @@
 
 namespace GStuff::OpenGL::Helper {
 
+struct Light {
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
+};
+
 inline bool isShaderCompileSuccessful(const ObjID shaderId, std::string_view label = {}) {
   int success{};
 
