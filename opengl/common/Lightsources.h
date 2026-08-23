@@ -13,8 +13,13 @@ namespace GStuff::OpenGL {
 // Maybe I can make this a derived class of something more generic in the future
 class LightSources {
 public:
-  
-  explicit LightSources(OpenGLProgram* pProgram);
+
+  struct LightSourceOptions {
+    std::string ActiveLightsPropName;
+    // Add others later. Maybe light type names
+  };
+
+  LightSources(OpenGLProgram* pProgram, const LightSourceOptions& = {"activeLights"});
   ~LightSources() = default;	
   LightSources(LightSources&& other);
   LightSources& operator=(LightSources&& other);
@@ -28,7 +33,8 @@ public:
   void SetCameraPosition(const std::string& name, const glm::vec3& position);
   void SetProperty(const std::string& constantName, const glm::vec3& property, const LightNumber num = 0);
   void Apply();
-    
+ 
+  // Add functions to remove light sources in future  
 
 private:
 
@@ -37,8 +43,11 @@ private:
 
   OpenGLProgram* m_pProgram;
   LightPropertyMap m_LightSourceMap;
+  LightSourceOptions m_Options;
 
   std::pair<std::string, glm::vec3> m_CurrentCamera;
+
+
 
   static constexpr ssize_t MAX_LIGHT_SOURCES { 16 };
 };

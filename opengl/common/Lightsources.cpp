@@ -5,7 +5,8 @@
 
 using namespace GStuff::OpenGL;
 
-LightSources::LightSources(OpenGLProgram* pProgram) : m_pProgram{pProgram} {}
+LightSources::LightSources(OpenGLProgram* pProgram, const LightSourceOptions& options/*={}*/) 
+  : m_pProgram{pProgram}, m_Options{options} {}
 
 LightSources::LightSources(LightSources&& other) {
   m_pProgram = other.m_pProgram;
@@ -13,6 +14,7 @@ LightSources::LightSources(LightSources&& other) {
 
   m_LightSourceMap = other.m_LightSourceMap;
   other.m_LightSourceMap.clear();
+  m_Options = other.m_Options;
 }
 
 LightSources& LightSources::operator=(LightSources&& other) {
@@ -21,6 +23,7 @@ LightSources& LightSources::operator=(LightSources&& other) {
 
   m_LightSourceMap = other.m_LightSourceMap;
   other.m_LightSourceMap.clear();
+  m_Options = other.m_Options;
 
   return *this;
 }
@@ -58,5 +61,7 @@ void LightSources::Apply() {
     for(const auto& entry : iter->second) {
       m_pProgram->SetConstant(entry.first, entry.second);
     }
+
+    m_pProgram->SetConstant(m_Options.ActiveLightsPropName, static_cast<int>(m_LightSourceMap.size()));
   }  
 }

@@ -247,14 +247,14 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
     // Light stuff
     lightSources.SetCameraPosition("cameraPosition", camera.Position());
-    lightSources.SetProperty("light1.position", light1Position);
-    lightSources.SetProperty("light1.ambient", sphereLightAttributes.ambient);
-    lightSources.SetProperty("light1.diffuse", sphereLightAttributes.diffuse);
-    lightSources.SetProperty("light1.specular", sphereLightAttributes.specular);
-    lightSources.SetProperty("light2.position", light2Position);
-    lightSources.SetProperty("light2.ambient", sphereLightAttributes.ambient);
-    lightSources.SetProperty("light2.diffuse", sphereLightAttributes.diffuse);
-    lightSources.SetProperty("light2.specular", sphereLightAttributes.specular);
+    lightSources.SetProperty("lights[0].position", light1Position, 0);
+    lightSources.SetProperty("lights[0].ambient", sphereLightAttributes.ambient, 0);
+    lightSources.SetProperty("lights[0].diffuse", sphereLightAttributes.diffuse, 0);
+    lightSources.SetProperty("lights[0].specular", sphereLightAttributes.specular, 0);
+    lightSources.SetProperty("lights[1].position", light2Position, 1);
+    lightSources.SetProperty("lights[1].ambient", sphereLightAttributes.ambient, 1);
+    lightSources.SetProperty("lights[1].diffuse", sphereLightAttributes.diffuse, 1);
+    lightSources.SetProperty("lights[1].specular", sphereLightAttributes.specular, 1);
     lightSources.Apply();
 
     // Material stuff
