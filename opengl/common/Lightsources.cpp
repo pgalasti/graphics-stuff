@@ -15,6 +15,7 @@ LightSources::LightSources(LightSources&& other) {
   m_LightSourceMap = other.m_LightSourceMap;
   other.m_LightSourceMap.clear();
   m_Options = other.m_Options;
+  m_LastActiveLightCount = other.m_LastActiveLightCount;
 }
 
 LightSources& LightSources::operator=(LightSources&& other) {
@@ -24,6 +25,7 @@ LightSources& LightSources::operator=(LightSources&& other) {
   m_LightSourceMap = other.m_LightSourceMap;
   other.m_LightSourceMap.clear();
   m_Options = other.m_Options;
+  m_LastActiveLightCount = other.m_LastActiveLightCount;
 
   return *this;
 }
@@ -62,6 +64,10 @@ void LightSources::Apply() {
       m_pProgram->SetConstant(entry.first, entry.second);
     }
 
-    m_pProgram->SetConstant(m_Options.ActiveLightsPropName, static_cast<int>(m_LightSourceMap.size()));
+    const ssize_t lightCount {static_cast<int>(m_LightSourceMap.size())};
+    if(m_LastActiveLightCount != lightCount) {
+      m_pProgram->SetConstant(m_Options.ActiveLightsPropName, static_cast<int>(m_LightSourceMap.size()));
+      m_LastActiveLightCount = lightCount;
+    }
   }  
 }

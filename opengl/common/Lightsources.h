@@ -47,7 +47,7 @@ private:
 
   std::pair<std::string, glm::vec3> m_CurrentCamera;
 
-
+  ssize_t m_LastActiveLightCount{0};
 
   static constexpr ssize_t MAX_LIGHT_SOURCES { 16 };
 };
