@@ -53,21 +53,15 @@ void LightSources::SetProperty(const std::string& constantName, const glm::vec3&
 void LightSources::Apply() {
   m_pProgram->SetConstant(m_CurrentCamera.first, m_CurrentCamera.second);
 
-  for(auto i {0z}; i < MAX_LIGHT_SOURCES; ++i) {
-    const auto iter {m_LightSourceMap.find(i)};
-    if(iter == m_LightSourceMap.end()) {
-      // Bail out early to save cycles
-      break;
-    }
-
-    for(const auto& entry : iter->second) {
+  for(const auto& [num, properties] : m_LightSourceMap) {
+    for(const auto& entry : properties) {
       m_pProgram->SetConstant(entry.first, entry.second);
     }
+  }
 
-    const ssize_t lightCount {static_cast<int>(m_LightSourceMap.size())};
-    if(m_LastActiveLightCount != lightCount) {
-      m_pProgram->SetConstant(m_Options.ActiveLightsPropName, static_cast<int>(m_LightSourceMap.size()));
-      m_LastActiveLightCount = lightCount;
-    }
-  }  
+  const ssize_t lightCount {static_cast<int>(m_LightSourceMap.size())};
+  if(m_LastActiveLightCount != lightCount) {
+    m_pProgram->SetConstant(m_Options.ActiveLightsPropName, static_cast<int>(m_LightSourceMap.size()));
+    m_LastActiveLightCount = lightCount;
+  }
 }
