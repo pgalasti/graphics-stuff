@@ -1,5 +1,8 @@
 #include "Lightsources.h"
 
+#include <format>
+#include <stdexcept>
+
 using namespace GStuff::OpenGL;
 
 LightSources::LightSources(OpenGLProgram* pProgram) : m_pProgram{pProgram} {}
@@ -28,6 +31,8 @@ void LightSources::SetCameraPosition(const std::string& name, const glm::vec3& p
 }
 
 void LightSources::SetProperty(const std::string& constantName, const glm::vec3& property, const LightNumber num/*=0*/) {
+
+  if(num > MAX_LIGHT_SOURCES) throw std::runtime_error(std::format("You can only have a max light source of {}", MAX_LIGHT_SOURCES));
 
   auto iter {m_LightSourceMap.find(num) };
   if(iter != m_LightSourceMap.end()) {
