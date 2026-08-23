@@ -119,9 +119,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glEnable(GL_DEPTH_TEST);
   std::cout << "OpenGL Version Loaded: " << glGetString(GL_VERSION) << std::endl;
 
-  std::cout << "Loading model" << std::endl;
   ProfilerMs profiler;
- 
   ModelLoader modelLoader(ModelLoader::Format::XYZNRGB);
   
   profiler.Start("Loading Models");
@@ -140,12 +138,15 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   addColor(modelVertices);
 
   std::cout << snapshot << std::endl;
-  std::cout << "Loaded " << modelVertices.size() + sphereVertices.size() << " vertices, " << modelIndices.size() + sphereIndices.size() << " indices" << std::endl;
 
   const std::size_t modelVertexByteSize{modelVertices.size()*sizeof(modelVertices[0])};
   const std::size_t modelIndexByteSize{modelIndices.size()*sizeof(modelIndices[0])};
   const std::size_t sphereVertexByteSize{sphereVertices.size()*sizeof(sphereVertices[0])};
   const std::size_t sphereIndexByteSize{sphereIndices.size()*sizeof(sphereIndices[0])};
+  
+  std::cout << "Model Vertices: " << modelVertices.size() << std::endl;
+  std::cout << "Model Indices : " << modelIndices.size() << std::endl;
+  std::cout << "Approx Memory : " << modelVertexByteSize + modelIndexByteSize << " bytes" << std::endl;
 
   // I need to implement a constructor without perfect forwarding to reuse a compiled shader..
   OpenGLProgram objectProgram {
