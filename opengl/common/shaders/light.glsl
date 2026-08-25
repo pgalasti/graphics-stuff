@@ -6,7 +6,7 @@
 struct LightAttributes {
   vec3 ambient;
   vec3 diffuse;
-  vec3 speceular;
+  vec3 specular;
 };
 
 struct DirectionalLight {
