@@ -27,12 +27,18 @@ public:
 
   struct ShaderConstants {
     // Common
-    std::string Ambient   {"ambient"};
-    std::string Diffuse   {"diffuse"};
-    std::string Specular  {"specular"};
+    std::string Ambient       {"ambient"};
+    std::string Diffuse       {"diffuse"};
+    std::string Specular      {"specular"};
 
     // Directional
-    std::string Direction {"direction"};
+    std::string Direction     {"direction"};
+
+    // Attenuation
+    std::string Position      {"position"};
+    std::string Att_Constant  {"constant"};
+    std::string Att_Linear    {"linear"};
+    std::string Att_Quadratic {"quadratic"};
     // Add others as I write them
   };
 
@@ -67,6 +73,35 @@ private:
 
 };
 
-}
+class AttenuationLight : public Light {
+public:
+  AttenuationLight(OpenGLProgram* pProgram, const std::string& constantName, const glm::vec3& position) : Light(pProgram, constantName), m_Position{position} {}
+  virtual ~AttenuationLight() = default;
 
+  virtual void Apply(const ShaderConstants& constantNames) = 0;
+
+  void SetPosition(const glm::vec3& position)   {m_Position = position;}
+  void SetAttenuation(const float constant, const float linear, const float quadratic) {
+    m_Constant = constant;
+    m_Linear = linear;
+    m_Quadratic = quadratic;
+  }
+
+protected:
+  glm::vec3 m_Position;
+  float m_Constant;
+  float m_Linear;
+  float m_Quadratic;
+};
+
+class PointLight : public AttenuationLight {
+public:
+  PointLight(OpenGLProgram* pProgram, const std::string& constantName, const glm::vec3& position) : AttenuationLight(pProgram, constantName, position) {}
+  ~PointLight() = default;
+
+  void Apply(const ShaderConstants& constantNames) override;
+private:
+};
+
+}
 #endif

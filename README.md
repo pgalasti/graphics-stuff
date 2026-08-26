@@ -2,6 +2,8 @@
 
 A playground for different graphics APIs.
 
+A lot of it is my iterative approach to (re)learning certain grapics stuffs.
+
 ## Cloning
 
 I use some submodules of some header libraries, so pull them down with the clone:

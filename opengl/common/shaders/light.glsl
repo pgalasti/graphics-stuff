@@ -15,8 +15,11 @@ struct DirectionalLight {
 };
 
 struct PointLight {
-  // Add fields as I go
+  vec3 position;
   LightAttributes attributes;
+  float constant,
+	linear,
+	quadratic;
 };
 
 struct Spotlight {
