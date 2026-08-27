@@ -35,10 +35,11 @@ using namespace GStuff::General::Math;
 using namespace GStuff::General;
 
 using CubeModelLoader = WavefrontVertexLoader<Vertex3DNUVf>;
+using SphereModelLoader = WavefrontVertexLoader<Vertex3Df>;
 
 void handleInput(GLFWwindow* pWindow);
 void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos);
-void addColor(std::vector<Vertex3DNRGBf>& vertices);
+void addColor(std::vector<Vertex3DRGBf>& vertices);
 
 constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
@@ -115,30 +116,51 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   ProfilerMs profiler;
  
   CubeModelLoader cubeLoader(CubeModelLoader::Format::XYZNUV);
+  SphereModelLoader sphereLoader(SphereModelLoader::Format::XYZ);
   
   profiler.Start("Loading Models");
   const CubeModelLoader::ModelData cubeData = cubeLoader.Load("./models/cube_unit_uv.obj", CubeModelLoader::LOAD_INDICES | CubeModelLoader::LOAD_NORMALS | CubeModelLoader::LOAD_UV);
+  const SphereModelLoader::ModelData sphereData = sphereLoader.Load("./models/sphere.obj", CubeModelLoader::LOAD_INDICES );
   const auto snapshot {profiler.Stop()};
 
   CubeModelLoader::VertexData cubeVertices{cubeData.first};
   const CubeModelLoader::IndexData cubeIndices{cubeData.second};
+  SphereModelLoader::VertexData sphereVertices{sphereData.first};
+  const SphereModelLoader::IndexData sphereIndices{sphereData.second};
 
   if(cubeVertices.empty() || cubeIndices.empty()) {
-    throw std::runtime_error("Unable to load vertices/indices of models!");
+    throw std::runtime_error("Unable to load vertices/indices of the cube!");
+  }
+  if(sphereVertices.empty() || sphereIndices.empty()) {
+    throw std::runtime_error("Unable to load vertices/indices of the sphere!");
   }
   //addColor(cubeVertices);
 
   std::cout << snapshot << std::endl;
-  std::cout << "Loaded " << cubeVertices.size() << " vertices, " << cubeIndices.size() << " indices" << std::endl;
+  std::cout << "Cube Model Loaded " << cubeVertices.size() << " vertices, " << cubeIndices.size() << " indices" << std::endl;
+  std::cout << "Sphere Model Loaded " << sphereVertices.size() << " vertices, " << sphereIndices.size() << " indices" << std::endl;
 
   const std::size_t cubeVertexByteSize{cubeVertices.size()*sizeof(cubeVertices[0])};
   const std::size_t cubeIndexByteSize{cubeIndices.size()*sizeof(cubeIndices[0])};
+  const std::size_t sphereVertexByteSize{sphereVertices.size()*sizeof(sphereVertices[0])};
+  const std::size_t sphereIndexByteSize{sphereIndices.size()*sizeof(sphereIndices[0])};
 
   // I need to implement a constructor without perfect forwarding to reuse a compiled shader..
   OpenGLProgram objectProgram {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
     std::make_unique<OpenGLShader>("./shaders/fs.glsl", Shader::ShaderType::Fragment)
   };
+  OpenGLProgram lightSphereProgram {
+    std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
+    std::make_unique<OpenGLShader>("./shaders/fs-light.glsl", Shader::ShaderType::Fragment)
+  };
+
+  ObjID sphereVAO, 
+	sphereVBO,
+	sphereEBO; 
+  glGenVertexArrays(1, &sphereVAO);
+  glGenBuffers(1, &sphereVBO);
+  glGenBuffers(1, &sphereEBO);
 
   ObjID cubeVAO, 
 	cubeVBO,
@@ -161,6 +183,17 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3DNUVf), (void*)(sizeof(float)*6));
   glEnableVertexAttribArray(2);
 
+  // Setup Sphere VAO
+  glBindVertexArray(sphereVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+  glBufferData(GL_ARRAY_BUFFER, sphereVertexByteSize, sphereVertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndexByteSize, sphereIndices.data(), GL_STATIC_DRAW);
+
+  // fs-light.glsl is a flat color, so the light sphere needs position only.
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3Df), static_cast<void*>(0));
+  glEnableVertexAttribArray(0);
+  
   profiler.Start("Load Textures");
   
   int width, height, nChannels;
@@ -228,10 +261,13 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     .Att_Linear    = "pointLight.linear",
     .Att_Quadratic = "pointLight.quadratic",
   });
-  
 
   const glm::mat4 projection { camera.Projection() };
   objectProgram.SetConstant("projection", projection);
+
+  // Setup our pointlight representation object
+  lightSphereProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+  lightSphereProgram.SetConstant("intensity", 1.0f); 
 
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
@@ -252,7 +288,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
     const glm::mat3 inverseTransposeMtx { glm::transpose(glm::inverse(modelMtx)) };
 
-
     // Setup matrix constants
     objectProgram.SetConstant("model", modelMtx);
     objectProgram.SetConstant("view", lookAt);
@@ -267,6 +302,17 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     containerTexture.Bind(CONTAINER_UNIT);
     containerEdgeTexture.Bind(CONTAINER_EDGE_UNIT);
     glDrawElements(GL_TRIANGLES, cubeIndices.size(), GL_UNSIGNED_INT, 0);
+
+    // Setup Pointlight sphere
+    modelMtx = glm::mat4(1.0f);
+    modelMtx = glm::translate(modelMtx, pointLightPos);
+    modelMtx = glm::scale(modelMtx, glm::vec3(0.1f, 0.1f, 0.1f));
+    lightSphereProgram.SetConstant("model", modelMtx);
+    lightSphereProgram.SetConstant("view", lookAt); // Need this?
+    lightSphereProgram.SetConstant("projection", projection);
+    lightSphereProgram.Activate();
+    glBindVertexArray(sphereVAO);
+    glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
 
@@ -337,7 +383,7 @@ void mouseEventCallback([[maybe_unused]]GLFWwindow* pWindow, double xPos, double
 
 }
 
-void addColor(std::vector<Vertex3DNRGBf>& vertices) {
+void addColor(std::vector<Vertex3DRGBf>& vertices) {
   for(auto& vertex : vertices) {
     vertex.r = 1.0f;
     vertex.g = 0.0f;
