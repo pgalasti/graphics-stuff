@@ -43,6 +43,7 @@ public:
   };
 
   virtual void Apply(const ShaderConstants& constantNames) = 0;
+  virtual void Update() = 0;
 
   // Could use an enum setter but this is more explicit I think
   void SetAmbient(const glm::vec3& ambient)   {m_Attributes.Ambient  = ambient;}
@@ -55,6 +56,7 @@ protected:
   std::string m_LightName;
 
   LightAttributes m_Attributes;
+  ShaderConstants m_ShaderConstants;
 };
 
 class DirectionalLight : public Light {
@@ -63,6 +65,7 @@ public:
   ~DirectionalLight() {}
 
   void Apply(const ShaderConstants& constantNames = {}) override;
+  void Update() override;
 
   void SetDirection(const glm::vec3& direction) {
     m_Direction = glm::normalize(direction);
@@ -79,6 +82,7 @@ public:
   virtual ~AttenuationLight() = default;
 
   virtual void Apply(const ShaderConstants& constantNames) = 0;
+  virtual void Update() = 0;
 
   void SetPosition(const glm::vec3& position)   {m_Position = position;}
   void SetAttenuation(const float constant, const float linear, const float quadratic) {
@@ -100,6 +104,7 @@ public:
   ~PointLight() = default;
 
   void Apply(const ShaderConstants& constantNames) override;
+  void Update() override;
 private:
 };
 

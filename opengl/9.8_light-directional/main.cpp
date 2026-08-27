@@ -8,7 +8,7 @@
 #include "opengl/common/OpenGLShaders.h"
 #include "opengl/common/Texture.h"
 #include "opengl/common/OpenGLCamera.h"
-#include "opengl/common/Lightsources.h"
+#include "opengl/common/Light.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -202,10 +202,14 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
 
   // Set directional light
-  objectProgram.SetConstant("directionalLight.direction", lightDirection);
-  objectProgram.SetConstant("directionalLight.attributes.ambient", lightAmbient);
-  objectProgram.SetConstant("directionalLight.attributes.diffuse", lightDiffuse);
-  objectProgram.SetConstant("directionalLight.attributes.specular", lightSpecular);
+  DirectionalLight directionalLight(&objectProgram, "directionalLight", lightDirection);
+  directionalLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
+  directionalLight.Apply({
+    "directionalLight.attributes.ambient",
+    "directionalLight.attributes.diffuse",
+    "directionalLight.attributes.specular",
+    "directionalLight.direction"
+  });
 
   const glm::mat4 projection { camera.Projection() };
   objectProgram.SetConstant("projection", projection);

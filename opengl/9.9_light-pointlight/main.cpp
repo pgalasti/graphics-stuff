@@ -55,6 +55,8 @@ OpenGLCamera camera(0.0f, 0.0f, 3.0f);
 FrameStatf g_FrameStat;
 
 float lastX{}, lastY{};
+glm::vec3 pointLightPos(-0.5f, 1.0f, 0.0f);
+bool doSpin{true};
 
 bool doOrtho{false};
 
@@ -233,7 +235,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   constexpr glm::vec3 lightAmbient(0.1f, 0.1f, 0.1f);
   constexpr glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
   constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
-  constexpr glm::vec3 pointLightPos(-0.5f, 1.0f, 0.0f);
   constexpr float pointConstant  {1.0f};
   constexpr float pointLinear    {0.22f};
   constexpr float pointQuadratic {0.2f};
@@ -269,6 +270,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   lightSphereProgram.SetConstant("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
   lightSphereProgram.SetConstant("intensity", 1.0f); 
 
+  float lastSpin{0};
+
   while(!glfwWindowShouldClose(pWindow)) {
     g_FrameStat.update(glfwGetTime());
     
@@ -277,14 +280,19 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
 
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   
+  
+    pointLight.SetPosition(pointLightPos);
+    pointLight.Update();
+
     const glm::mat4 lookAt { camera.ApplyView() };
-   
     objectProgram.SetConstant("cameraPosition", camera.Position());
     // Setup Cube 
     glm::mat4 modelMtx {glm::mat4(1.0f)};
     modelMtx = glm::translate(modelMtx, glm::vec3(0.0f, 0.0f, 0.0f));
-    modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
+    if(doSpin) {
+      lastSpin = glfwGetTime();
+    }
+    modelMtx = glm::rotate(modelMtx, lastSpin, glm::vec3(1.0f, 1.0f, 1.0f));
     modelMtx = glm::scale(modelMtx, glm::vec3(0.25f, 0.25f, 0.25f));
     const glm::mat3 inverseTransposeMtx { glm::transpose(glm::inverse(modelMtx)) };
 
@@ -308,7 +316,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::translate(modelMtx, pointLightPos);
     modelMtx = glm::scale(modelMtx, glm::vec3(0.1f, 0.1f, 0.1f));
     lightSphereProgram.SetConstant("model", modelMtx);
-    lightSphereProgram.SetConstant("view", lookAt); // Need this?
+    lightSphereProgram.SetConstant("view", lookAt); 
     lightSphereProgram.SetConstant("projection", projection);
     lightSphereProgram.Activate();
     glBindVertexArray(sphereVAO);
@@ -339,6 +347,8 @@ void handleInput(GLFWwindow* pWindow) {
 
   constexpr float speed {2.50f};
   float cameraSpeed {speed*g_FrameStat.DeltaTime};
+  float sphereSpeed {speed*g_FrameStat.DeltaTime}; // Can change later
+
   if(glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS) {
     camera.Move(CameraDirection::Forward, cameraSpeed);
   } 
@@ -356,6 +366,30 @@ void handleInput(GLFWwindow* pWindow) {
   } 
   if(glfwGetKey(pWindow, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
     camera.Move(CameraDirection::Down, cameraSpeed);
+  }
+  // Sphere Controls
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_4) == GLFW_PRESS) {
+    pointLightPos.x -= sphereSpeed;    
+  }
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_6) == GLFW_PRESS) {
+    pointLightPos.x += sphereSpeed;    
+  }
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_8) == GLFW_PRESS) {
+    pointLightPos.y += sphereSpeed;    
+  }
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_2) == GLFW_PRESS) {
+    pointLightPos.y -= sphereSpeed;    
+  }
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_1) == GLFW_PRESS) {
+    pointLightPos.z += sphereSpeed;    
+  }
+  if(glfwGetKey(pWindow, GLFW_KEY_KP_3) == GLFW_PRESS) {
+    pointLightPos.z -= sphereSpeed;    
+  }
+
+  // Spin of cube control
+  if(glfwGetKey(pWindow, GLFW_KEY_1) == GLFW_PRESS) {
+    doSpin = !doSpin;
   }
 }
 void mouseEventCallback([[maybe_unused]]GLFWwindow* pWindow, double xPos, double yPos) {

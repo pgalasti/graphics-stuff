@@ -35,7 +35,7 @@ void main() {
 
   // Diffuse
   vec3 norm = normalize(Normal);
-  float diff = max(dot(norm, directionalLight.direction), 0.0);
+  float diff = max(dot(norm, -directionalLight.direction), 0.0);
   vec3 diffuse = directionalLight.attributes.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
 
   // Specular
