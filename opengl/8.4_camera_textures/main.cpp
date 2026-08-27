@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/General.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
@@ -54,6 +55,9 @@ float lastX{}, lastY{};
 bool doOrtho{false};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+  PROGRAM_DESC("Camera /w Textures", "You should see rotating cubes with textures.",
+          "A - Move Left\nW - Move Forward\nD - Move Right\nS - Move Back\nMouse Movement - Camera Angle");
 
   if(argc > 1) {
     doOrtho = (*argv[1] == 'o');
@@ -153,7 +157,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   camera.Up(0.0f, 1.0f, 0.0f);
 
   program.Activate();
-  program.SetConstant("containerTexture", CONTAINER_UNIT);
+  program.SetConstant("containerTexture", static_cast<int>(CONTAINER_UNIT));
 
   if(doOrtho) { 
     constexpr float orthoHalfHeight {ORTHO_HEIGHT*0.5f};
@@ -249,7 +253,7 @@ void handleInput(GLFWwindow* pWindow) {
     camera.Move(CameraDirection::Down, cameraSpeed);
   }
 }
-void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos) {
+void mouseEventCallback([[maybe_unused]]GLFWwindow* pWindow, double xPos, double yPos) {
 
   static bool firstMouse{true};
   if(firstMouse) {

@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "opengl/common/defines.h"
@@ -45,6 +46,8 @@ constexpr GLuint CONTAINER_UNIT {0};
 constexpr GLuint WALL_UNIT      {1};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+  PROGRAM_DESC("Transformation", "You should see some spinning rainbow kitty bros!", "This is a test");
 
 #ifndef __APPLE__
   // Wayland stuff makes life hard
@@ -118,8 +121,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   stbi_image_free(textureData);
 
   program.Activate();
-  program.SetConstant("containerTexture", CONTAINER_UNIT);
-  program.SetConstant("wallTexture", WALL_UNIT);
+  program.SetConstant("containerTexture", static_cast<int>(CONTAINER_UNIT));
+  program.SetConstant("wallTexture", static_cast<int>(WALL_UNIT));
 
 
   while(!glfwWindowShouldClose(pWindow)) {

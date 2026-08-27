@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/General.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
@@ -52,6 +53,9 @@ FrameStatf g_FrameStat;
 bool doOrtho{false};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+  PROGRAM_DESC("Moving Camera", "You should see spinning cubes (again), " 
+          "but you can move this time!",
+          "A - Move Left\nW - Move Forward\nD - Move Right\nS - Move Back");
 
   if(argc > 1) {
     doOrtho = (*argv[1] == 'o');

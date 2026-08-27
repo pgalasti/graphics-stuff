@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "general/ModelLoader.h"
@@ -41,7 +42,8 @@ constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
-
+  PROGRAM_DESC("Transforms with MVP", "You should see 4 cubes of a "
+          "random interpolated color pallette rotating in different perspective");
 #ifndef __APPLE__
   // Wayland stuff makes life hard
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);

@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/General.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
@@ -53,6 +54,16 @@ float lastX{}, lastY{};
 bool doOrtho{false};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+  PROGRAM_DESC("Ambient Light", "A cube spinning in place and a bright white ball rotating around it.",
+          "A       - Move Left\n"
+          "W       - Move Forward\n"
+          "D       - Move Right\n"
+          "S       - Move Back\n"
+          "SPACE   - Move up\n"
+          "ALT/OPT - Move Down\n"
+          "Mouse Movement - Camera Angle"
+  );
 
   if(argc > 1) {
     doOrtho = (*argv[1] == 'o');

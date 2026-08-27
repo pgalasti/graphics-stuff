@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "general/ModelLoader.h"
@@ -32,7 +33,7 @@ using namespace GStuff::General;
 void handleInput(GLFWwindow* pWindow);
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
-
+  PROGRAM_DESC("Yellow Spinny Cube", "You should see a very bright yellow cube rotating in place.");
 #ifndef __APPLE__
   // Wayland stuff makes life hard
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);

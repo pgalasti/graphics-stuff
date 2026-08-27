@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/General.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
@@ -53,6 +54,10 @@ float lastX{}, lastY{};
 bool doOrtho{false};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
+
+  PROGRAM_DESC("Light Lit Cube", "You should see a bright red cube spinning. "
+          "Color generated constant passed to fragment shader.",
+          "A - Move Left\nW - Move Forward\nD - Move Right\nS - Move Back\nMouse Movement - Camera Angle");
 
   if(argc > 1) {
     doOrtho = (*argv[1] == 'o');
@@ -219,7 +224,7 @@ void handleInput(GLFWwindow* pWindow) {
     camera.Move(CameraDirection::Down, cameraSpeed);
   }
 }
-void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos) {
+void mouseEventCallback([[maybe_unused]]GLFWwindow* pWindow, double xPos, double yPos) {
 
   static bool firstMouse{true};
   if(firstMouse) {

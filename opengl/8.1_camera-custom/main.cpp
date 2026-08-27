@@ -1,3 +1,4 @@
+#include "general/GenDefines.h"
 #include "general/Math.h"
 #include "general/Profiler.h"
 #include "general/ModelLoader.h"
@@ -42,7 +43,8 @@ constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
 
 int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
-
+  PROGRAM_DESC("Rotating Cubes (again)", "You should see rotating cubes at varing distances.",
+          "Only difference is VP matrices are wrapped up nicely in a class");
 #ifndef __APPLE__
   // Wayland stuff makes life hard
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
@@ -134,7 +136,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     modelMtx = glm::rotate(modelMtx, static_cast<float>(glfwGetTime()), glm::vec3(1.0f, 1.0f, 1.0f));
     SetTransformation(program.ProgramID(), "model", modelMtx);
 
-    glm::mat4 lookAt { camera.Apply() };
+    glm::mat4 lookAt { camera.ApplyView() };
     SetTransformation(program.ProgramID(), "view", lookAt);
 
     glm::mat4 projMtx {glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT), 0.1f, 1000.0f)}; 
