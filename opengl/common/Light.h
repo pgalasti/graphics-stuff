@@ -39,7 +39,9 @@ public:
     std::string Att_Constant  {"constant"};
     std::string Att_Linear    {"linear"};
     std::string Att_Quadratic {"quadratic"};
-    // Add others as I write them
+  
+    // Spotlight
+    std::string CutOff        {"cutOff"}; 
   };
 
   virtual void Apply(const ShaderConstants& constantNames) = 0;
@@ -93,9 +95,9 @@ public:
 
 protected:
   glm::vec3 m_Position;
-  float m_Constant;
-  float m_Linear;
-  float m_Quadratic;
+  float m_Constant  {1.0f};
+  float m_Linear    {0.0f};
+  float m_Quadratic {0.0f};
 };
 
 class PointLight : public AttenuationLight {
@@ -107,6 +109,28 @@ public:
   void Update() override;
 private:
 };
+
+
+class SpotLight : public AttenuationLight {
+public:
+  SpotLight(OpenGLProgram* pProgram, const std::string& constantName, const glm::vec3& position) : AttenuationLight(pProgram, constantName, position) {}
+  ~SpotLight () = default;
+
+  void Apply(const ShaderConstants& constantNames) override;
+  void Update() override;
+
+  void SetDirection(const glm::vec3& direction) { m_Direction = glm::normalize(direction); }
+
+  // Takes the half-angle of the cone in degrees; the shader compares against
+  // cos(theta), so store the cosine here.
+  void SetCutOff(const float degrees) { m_CutOff = glm::cos(glm::radians(degrees)); }
+private:
+  glm::vec3 m_Direction;
+  float m_CutOff{glm::cos(glm::radians(12.5f))};
+
+};
+
+
 
 }
 #endif

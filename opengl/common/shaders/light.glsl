@@ -23,6 +23,7 @@ struct PointLight {
 };
 
 struct Spotlight {
-  // Add fields as I go
+  vec3 position;
   LightAttributes attributes;
+  float cutOff;
 };
