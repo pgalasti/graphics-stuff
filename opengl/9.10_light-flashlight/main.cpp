@@ -41,6 +41,10 @@ void handleInput(GLFWwindow* pWindow);
 void mouseEventCallback(GLFWwindow* pWindow, double xPos, double yPos);
 void addColor(std::vector<Vertex3DRGBf>& vertices);
 
+DirectionalLight SetupDirectionalLight(OpenGLProgram& program, const glm::vec3& lightDirection);
+PointLight SetupPointLight(OpenGLProgram& program, const glm::vec3& pointLightPosition);
+SpotLight SetupSpotLight(OpenGLProgram& program);
+
 constexpr int WINDOW_WIDTH  {800};
 constexpr int WINDOW_HEIGHT {600};
 constexpr float NEAR {0.1f};
@@ -234,54 +238,11 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   }
 
   constexpr glm::vec3 lightDirection(0.0f, -1.0f, 0.0f);
-  constexpr glm::vec3 lightAmbient(0.1f, 0.1f, 0.1f);
-  constexpr glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
-  constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
-  constexpr float pointConstant  {1.0f};
-  constexpr float pointLinear    {0.22f};
-  constexpr float pointQuadratic {0.2f};
 
-  // Set directional light
-  DirectionalLight directionalLight(&objectProgram, "directionalLight", lightDirection);
-  directionalLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
-  directionalLight.Apply({
-    .Ambient   = "directionalLight.attributes.ambient",
-    .Diffuse   = "directionalLight.attributes.diffuse",
-    .Specular  = "directionalLight.attributes.specular",
-    .Direction = "directionalLight.direction"
-  });
-
-  // Setup a point light
-  PointLight pointLight(&objectProgram, "pointLight", pointLightPos);
-  pointLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
-  pointLight.SetAttenuation(pointConstant, pointLinear, pointQuadratic);
-  pointLight.Apply({
-    .Ambient       = "pointLight.attributes.ambient",
-    .Diffuse       = "pointLight.attributes.diffuse",
-    .Specular      = "pointLight.attributes.specular",
-    .Position      = "pointLight.position",
-    .Att_Constant  = "pointLight.constant",
-    .Att_Linear    = "pointLight.linear",
-    .Att_Quadratic = "pointLight.quadratic",
-  });
-
-  SpotLight spotLight(&objectProgram, "spotLight", camera.Position());
-  spotLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
-  spotLight.SetAttenuation(pointConstant, pointLinear, pointQuadratic);
-  spotLight.SetCutOff(12.5f);
-  spotLight.SetDirection(camera.Front());
-  spotLight.SetPosition(camera.Position());
-  spotLight.Apply({
-    .Ambient       = "spotLight.attributes.ambient",
-    .Diffuse       = "spotLight.attributes.diffuse",
-    .Specular      = "spotLight.attributes.specular",
-    .Direction     = "spotLight.direction",
-    .Position      = "spotLight.position",
-    .Att_Constant  = "spotLight.constant",
-    .Att_Linear    = "spotLight.linear",
-    .Att_Quadratic = "spotLight.quadratic",
-    .CutOff        = "spotLight.cutOff"
-  });
+  // Setup our lights
+  DirectionalLight directionalLight { SetupDirectionalLight(objectProgram, lightDirection) };
+  PointLight pointLight {SetupPointLight(objectProgram, pointLightPos)}; 
+  SpotLight spotLight {SetupSpotLight(objectProgram)};
 
   // Dirty
   pSpotLight = &spotLight;
@@ -451,4 +412,77 @@ void addColor(std::vector<Vertex3DRGBf>& vertices) {
     vertex.g = 0.0f;
     vertex.b = 0.0f;
   }
+}
+
+DirectionalLight SetupDirectionalLight(OpenGLProgram& program, const glm::vec3& lightDirection) {
+  
+  constexpr glm::vec3 lightAmbient(0.1f, 0.1f, 0.1f);
+  constexpr glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
+  constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
+  
+  DirectionalLight directionalLight(&program, "directionalLight", lightDirection);
+  directionalLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
+  directionalLight.Apply({
+    .Ambient   = "directionalLight.attributes.ambient",
+    .Diffuse   = "directionalLight.attributes.diffuse",
+    .Specular  = "directionalLight.attributes.specular",
+    .Direction = "directionalLight.direction"
+  });
+
+  return directionalLight;
+}
+
+PointLight SetupPointLight(OpenGLProgram& program, const glm::vec3& pointLightPosition) {
+  
+  constexpr glm::vec3 lightAmbient(0.1f, 0.1f, 0.1f);
+  constexpr glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
+  constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
+  constexpr float pointConstant  {1.0f};
+  constexpr float pointLinear    {0.22f};
+  constexpr float pointQuadratic {0.2f};
+  
+  PointLight pointLight(&program, "pointLight", pointLightPosition);
+  pointLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
+  pointLight.SetAttenuation(pointConstant, pointLinear, pointQuadratic);
+  pointLight.Apply({
+    .Ambient       = "pointLight.attributes.ambient",
+    .Diffuse       = "pointLight.attributes.diffuse",
+    .Specular      = "pointLight.attributes.specular",
+    .Position      = "pointLight.position",
+    .Att_Constant  = "pointLight.constant",
+    .Att_Linear    = "pointLight.linear",
+    .Att_Quadratic = "pointLight.quadratic",
+  });
+
+  return pointLight;
+}
+
+SpotLight SetupSpotLight(OpenGLProgram& program) {
+  constexpr glm::vec3 lightAmbient(0.1f, 0.1f, 0.1f);
+  constexpr glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
+  constexpr glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
+  constexpr float pointConstant  {1.0f};
+  constexpr float pointLinear    {0.22f};
+  constexpr float pointQuadratic {0.2f};
+  constexpr float cutoff         {12.5f};
+
+  SpotLight spotLight(&program, "spotLight", camera.Position());
+  spotLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
+  spotLight.SetAttenuation(pointConstant, pointLinear, pointQuadratic);
+  spotLight.SetCutOff(cutoff);
+  spotLight.SetDirection(camera.Front());
+  spotLight.SetPosition(camera.Position());
+  spotLight.Apply({
+    .Ambient       = "spotLight.attributes.ambient",
+    .Diffuse       = "spotLight.attributes.diffuse",
+    .Specular      = "spotLight.attributes.specular",
+    .Direction     = "spotLight.direction",
+    .Position      = "spotLight.position",
+    .Att_Constant  = "spotLight.constant",
+    .Att_Linear    = "spotLight.linear",
+    .Att_Quadratic = "spotLight.quadratic",
+    .CutOff        = "spotLight.cutOff"
+  });
+
+  return spotLight;
 }

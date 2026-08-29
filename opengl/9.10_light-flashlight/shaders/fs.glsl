@@ -87,10 +87,11 @@ void getPointLightValues(in PointLight light, in vec3 norm, vec3 lightDirection,
 
 void getFlashLightValues(in SpotLight light, in vec3 norm, in vec3 lightDirection, out vec3 ambient, out vec3 diffuse, out vec3 specular) {
 
-  // Since it's a flashlight we'll just ignore ambient.
   ambient  = vec3(0.0f);
   diffuse  = vec3(0.0f);
   specular = vec3(0.0f);
+
+  ambient = light.attributes.ambient * texture(material.diffuse, TexCoords).rgb;
 
   float theta = dot(lightDirection, normalize(-light.direction));
   if(theta > light.cutOff) {
