@@ -36,6 +36,7 @@ struct SpotLight {
   vec3 direction;
   LightAttributes attributes;
   float cutOff;
+  float outerCutOff;
   float constant,
         linear,
         quadratic;
@@ -94,7 +95,7 @@ void getFlashLightValues(in SpotLight light, in vec3 norm, in vec3 lightDirectio
   ambient = light.attributes.ambient * texture(material.diffuse, TexCoords).rgb;
 
   float theta = dot(lightDirection, normalize(-light.direction));
-  if(theta > light.cutOff) {
+  if(theta > light.outerCutOff) {
     // Diffuse
     float diff = max(dot(norm, lightDirection), 0.0);
     diffuse = light.attributes.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
@@ -108,8 +109,11 @@ void getFlashLightValues(in SpotLight light, in vec3 norm, in vec3 lightDirectio
     float distance = length(light.position - fragPosition);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    diffuse  *= attenuation;
-    specular *= attenuation;
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff)/epsilon, 0.0, 1.0);
+    
+    diffuse  *= (attenuation*intensity);
+    specular *= (attenuation*intensity);
   }
 
 }

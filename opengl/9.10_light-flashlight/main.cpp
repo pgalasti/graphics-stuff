@@ -465,11 +465,13 @@ SpotLight SetupSpotLight(OpenGLProgram& program) {
   constexpr float pointLinear    {0.22f};
   constexpr float pointQuadratic {0.2f};
   constexpr float cutoff         {12.5f};
+  constexpr float outerCutoff    {17.5f};
 
   SpotLight spotLight(&program, "spotLight", camera.Position());
   spotLight.SetAttributes({lightAmbient, lightDiffuse, lightSpecular});
   spotLight.SetAttenuation(pointConstant, pointLinear, pointQuadratic);
   spotLight.SetCutOff(cutoff);
+  spotLight.SetOuterCutOff(outerCutoff);
   spotLight.SetDirection(camera.Front());
   spotLight.SetPosition(camera.Position());
   spotLight.Apply({
@@ -481,7 +483,8 @@ SpotLight SetupSpotLight(OpenGLProgram& program) {
     .Att_Constant  = "spotLight.constant",
     .Att_Linear    = "spotLight.linear",
     .Att_Quadratic = "spotLight.quadratic",
-    .CutOff        = "spotLight.cutOff"
+    .CutOff        = "spotLight.cutOff",
+    .OuterCutOff   = "spotLight.outerCutOff"
   });
 
   return spotLight;

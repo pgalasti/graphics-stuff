@@ -26,4 +26,5 @@ struct Spotlight {
   vec3 position;
   LightAttributes attributes;
   float cutOff;
+  float outerCutOff;
 };

@@ -58,25 +58,31 @@ void SpotLight::Apply(const ShaderConstants& constants) {
 
 void SpotLight::Update() {
 
-  const std::string ambientName   { m_ShaderConstants.Ambient };
-  const std::string diffuseName   { m_ShaderConstants.Diffuse };
-  const std::string specularName  { m_ShaderConstants.Specular };
-  const std::string directionName { m_ShaderConstants.Direction };
-  const std::string positionName  { m_ShaderConstants.Position };
-  const std::string cutoffName    { m_ShaderConstants.CutOff };
-  const std::string constantName  { m_ShaderConstants.Att_Constant};
-  const std::string linearName    { m_ShaderConstants.Att_Linear};
-  const std::string quadraticName { m_ShaderConstants.Att_Quadratic};
+  const std::string ambientName     { m_ShaderConstants.Ambient };
+  const std::string diffuseName     { m_ShaderConstants.Diffuse };
+  const std::string specularName    { m_ShaderConstants.Specular };
+  const std::string directionName   { m_ShaderConstants.Direction };
+  const std::string positionName    { m_ShaderConstants.Position };
+  const std::string cutoffName      { m_ShaderConstants.CutOff };
+  const std::string outerCutoffName { m_ShaderConstants.OuterCutOff };
+  const std::string constantName    { m_ShaderConstants.Att_Constant};
+  const std::string linearName      { m_ShaderConstants.Att_Linear};
+  const std::string quadraticName   { m_ShaderConstants.Att_Quadratic};
   const auto [ambient, diffuse, specular] = m_Attributes;
   
-  m_pProgram->SetConstant(ambientName,   ambient);
-  m_pProgram->SetConstant(diffuseName,   diffuse);
-  m_pProgram->SetConstant(specularName,  specular);
-  m_pProgram->SetConstant(directionName, m_Direction);
-  m_pProgram->SetConstant(positionName,  m_Position);
-  m_pProgram->SetConstant(cutoffName,    m_CutOff);
-  m_pProgram->SetConstant(constantName,  m_Constant);
-  m_pProgram->SetConstant(linearName,    m_Linear);
-  m_pProgram->SetConstant(quadraticName, m_Quadratic);
+  m_pProgram->SetConstant(ambientName,     ambient);
+  m_pProgram->SetConstant(diffuseName,     diffuse);
+  m_pProgram->SetConstant(specularName,    specular);
+  m_pProgram->SetConstant(directionName,   m_Direction);
+  m_pProgram->SetConstant(positionName,    m_Position);
+  m_pProgram->SetConstant(cutoffName,      m_CutOff);
+  m_pProgram->SetConstant(outerCutoffName, m_OuterCutOff);
+  m_pProgram->SetConstant(constantName,    m_Constant);
+  m_pProgram->SetConstant(linearName,      m_Linear);
+  m_pProgram->SetConstant(quadraticName,   m_Quadratic);
+  
+  if(!m_EnableSoftLight) {
+    m_pProgram->SetConstant(outerCutoffName, m_CutOff);
+  }
   
 }

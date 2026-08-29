@@ -42,6 +42,7 @@ public:
   
     // Spotlight
     std::string CutOff        {"cutOff"}; 
+    std::string OuterCutOff   {"outerCutOff"}; 
   };
 
   virtual void Apply(const ShaderConstants& constantNames) = 0;
@@ -121,12 +122,15 @@ public:
 
   void SetDirection(const glm::vec3& direction) { m_Direction = glm::normalize(direction); }
 
-  // Takes the half-angle of the cone in degrees; the shader compares against
-  // cos(theta), so store the cosine here.
   void SetCutOff(const float degrees) { m_CutOff = glm::cos(glm::radians(degrees)); }
+  void SetOuterCutOff(const float degrees) { m_OuterCutOff = glm::cos(glm::radians(degrees)); }
+  void EnableSoftLight(bool enable) { m_EnableSoftLight = enable; }
+
 private:
   glm::vec3 m_Direction;
   float m_CutOff{glm::cos(glm::radians(12.5f))};
+  float m_OuterCutOff{glm::cos(glm::radians(17.5f))};
+  bool m_EnableSoftLight{true};
 
 };
 
