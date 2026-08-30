@@ -1,8 +1,10 @@
 #include "Texture.h"
 
 using namespace GStuff::OpenGL;
+using namespace GStuff::General;
 
-Texture::Texture(const TextureData* data, int width, int height, GLenum format) {
+Texture::Texture(const TextureData* data, int width, int height, GLenum format) 
+  : BaseTexture(width, height) {
 
   // Upload without disturbing the sampler state: whatever unit is active keeps
   // the binding it had, so Bind() is the only thing that decides unit ownership.
