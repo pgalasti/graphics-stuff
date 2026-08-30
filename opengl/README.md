@@ -11,6 +11,7 @@ My iterative improvements while I mostly read through https://learnopengl.com/
 | GLFW 3 |
 | OpenGL (obviously)|
 | glm, stb (I made as submodules)|
+| assimp (After the 9_* programs)|
 
 ## Installing the libraries
 
@@ -18,14 +19,14 @@ My iterative improvements while I mostly read through https://learnopengl.com/
 
 ```sh
 sudo apt update
-sudo apt install build-essential libglew-dev libglfw3-dev
+sudo apt install build-essential libglew-dev libglfw3-dev libassimp-dev
 ```
 
 ### macOS
 
 ```sh
 xcode-select --install
-brew install glew glfw
+brew install glew glfw assimp
 ```
 
 ### Linux display note
@@ -54,3 +55,6 @@ I setup a macro to time operations in some programs. It can be set with the foll
 ```sh
 make profile        # clean rebuild with PROFILER_ENABLE_INLINE_MACRO defined
 ```
+
+### Note on model loading
+I have a primative Wavefront .obj file loader included in general but decided to not re-invent the wheel for other file formats and decided to use [assimp](https://github.com/assimp/assimp/tree/master)
