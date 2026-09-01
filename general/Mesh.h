@@ -17,11 +17,11 @@ public:
   virtual ~Mesh() = default;
 
   using Program = GStuff::General::Shaders::Program;
-  using TexturePtrList = std::vector<BaseTexture<TextureID>*>;
+  using TexturePtrList = std::vector<std::pair<BaseTexture<TextureID>*, TextureID>>;
 
   virtual void Draw(Program* pProgram) = 0;
   virtual void Setup() = 0;
-  virtual void SetTexture(BaseTexture<TextureID>*) = 0;
+  virtual void SetTexture(BaseTexture<TextureID>*, TextureID positionNum) = 0;
 
 protected:
 

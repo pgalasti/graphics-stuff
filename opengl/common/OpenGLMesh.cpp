@@ -3,11 +3,23 @@
 using namespace GStuff::OpenGL;
 
 void OpenGLMesh::Draw(Program* pProgram) {
+  for(auto element : m_TexturePtrs) {
+    auto[pTexture, positionNum] = element;
+
+    // Need a way to know the name of the constant being set here
+
+    pTexture->Bind(positionNum);
+    glBindVertexArray(m_VAO);
+    glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+  }
 }
+
 void OpenGLMesh::Setup() {
 }
-void OpenGLMesh::SetTexture(GStuff::General::BaseTexture<GLuint>* pTexture) {
-  m_TexturePtrs.push_back(pTexture);
+
+void OpenGLMesh::SetTexture(GStuff::General::BaseTexture<GLuint>* pTexture, TextureID positionNum) {
+  m_TexturePtrs.push_back({pTexture, positionNum);
 }
 
 void OpenGLMesh::Init() {

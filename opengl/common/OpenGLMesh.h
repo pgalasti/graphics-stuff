@@ -24,7 +24,7 @@ public:
 
   void Draw(Program* pProgram) override;
   void Setup() override;
-  void SetTexture(GStuff::General::BaseTexture<GLuint>* pTexture) override; 
+  void SetTexture(GStuff::General::BaseTexture<GLuint>* pTexture, TextureID positionNum) override; 
 
 private:
   ObjID m_VAO;
