@@ -5,6 +5,7 @@
 #include "BaseTexture.h"
 
 #include <vector>
+#include <string>
 
 namespace GStuff::General {
 
