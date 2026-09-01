@@ -150,11 +150,6 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   std::cout << "Cube Model Loaded " << cubeVertices.size() << " vertices, " << cubeIndices.size() << " indices" << std::endl;
   std::cout << "Sphere Model Loaded " << sphereVertices.size() << " vertices, " << sphereIndices.size() << " indices" << std::endl;
 
-  const std::size_t cubeVertexByteSize{cubeVertices.size()*sizeof(cubeVertices[0])};
-  const std::size_t cubeIndexByteSize{cubeIndices.size()*sizeof(cubeIndices[0])};
-  const std::size_t sphereVertexByteSize{sphereVertices.size()*sizeof(sphereVertices[0])};
-  const std::size_t sphereIndexByteSize{sphereIndices.size()*sizeof(sphereIndices[0])};
-
   // I need to implement a constructor without perfect forwarding to reuse a compiled shader..
   OpenGLProgram objectProgram {
     std::make_unique<OpenGLShader>("./shaders/vs.glsl", Shader::ShaderType::Vertex),
@@ -165,25 +160,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     std::make_unique<OpenGLShader>("./shaders/fs-light.glsl", Shader::ShaderType::Fragment)
   };
 
-  ObjID sphereVAO, 
-	sphereVBO,
-	sphereEBO; 
-  glGenVertexArrays(1, &sphereVAO);
-  glGenBuffers(1, &sphereVBO);
-  glGenBuffers(1, &sphereEBO);
-
-  OpenGLMesh cubeMesh(cubeVertices, cubeIndices);
-
-  // Setup Sphere VAO
-  glBindVertexArray(sphereVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-  glBufferData(GL_ARRAY_BUFFER, sphereVertexByteSize, sphereVertices.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndexByteSize, sphereIndices.data(), GL_STATIC_DRAW);
-
-  // fs-light.glsl is a flat color, so the light sphere needs position only.
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3Df), static_cast<void*>(0));
-  glEnableVertexAttribArray(0);
+  OpenGLMesh3DNUVf cubeMesh(cubeVertices, cubeIndices);
+  OpenGLMesh3Df sphereMesh(sphereVertices, sphereIndices);
   
   profiler.Start("Load Textures");
   
@@ -287,10 +265,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     lightSphereProgram.SetConstant("view", lookAt); 
     lightSphereProgram.SetConstant("projection", projection);
     lightSphereProgram.Activate();
-    glBindVertexArray(sphereVAO);
-    glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
+    sphereMesh.Draw(&lightSphereProgram);
 
     glfwSwapBuffers(pWindow);
   }
