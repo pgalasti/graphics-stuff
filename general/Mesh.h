@@ -17,6 +17,7 @@ public:
   virtual ~Mesh() = default;
 
   using Program = GStuff::General::Shaders::Program;
+  using TexturePtrList = std::vector<BaseTexture<TextureID>*>;
 
   virtual void Draw(Program* pProgram) = 0;
   virtual void Setup() = 0;
@@ -26,8 +27,7 @@ protected:
 
   std::vector<VertexType> m_Vertices;
   std::vector<unsigned int> m_Indices;
-  BaseTexture<TextureID>* m_pTexture;
-  
+  TexturePtrList m_TexturePtrs; 
 };
 
 }

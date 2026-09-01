@@ -7,6 +7,7 @@ void OpenGLMesh::Draw(Program* pProgram) {
 void OpenGLMesh::Setup() {
 }
 void OpenGLMesh::SetTexture(GStuff::General::BaseTexture<GLuint>* pTexture) {
+  m_TexturePtrs.push_back(pTexture);
 }
 
 void OpenGLMesh::Init() {
@@ -17,7 +18,7 @@ void OpenGLMesh::Init() {
   glGenBuffers(1, &m_EBO);
 
   glBindVertexArray(m_VAO);
-  glBindBuffer(GLL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 
   glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(Vertex3DNUVf), &m_Vertices[0], GL_STATIC_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(unsigned int), &m_Indices[0], GL_STATIC_DRAW);
