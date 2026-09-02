@@ -16,7 +16,7 @@ endif
 
 TARGET   := mesh 
 COMMON   := ../common
-SRCS     := main.cpp $(COMMON)/OpenGLShaders.cpp $(COMMON)/Texture.cpp $(COMMON)/OpenGLCamera.cpp $(COMMON)/Lightsources.cpp $(COMMON)/Light.cpp $(COMMON)/OpenGLMesh.cpp
+SRCS     := main.cpp $(COMMON)/OpenGLShaders.cpp $(COMMON)/Texture.cpp $(COMMON)/OpenGLCamera.cpp $(COMMON)/Lightsources.cpp $(COMMON)/Light.cpp $(COMMON)/OpenGLMesh.cpp $(COMMON)/OpenGLModel.cpp
 OBJS     := $(notdir $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 

@@ -4,9 +4,11 @@
 #include "Shaders.h"
 
 #include <string>
+#include <vector>
 
 namespace GStuff::General {
 
+template <typename MeshType>
 class Model {
 public:
   Model(const std::string& modelPath) 
@@ -17,7 +19,8 @@ public:
   virtual void Draw(Program*) = 0;
   
 protected:
-  std::string m_Path;
+  std::string m_FilePath;
+  std::vector<MeshType> m_Meshes;
 };
 
 }
