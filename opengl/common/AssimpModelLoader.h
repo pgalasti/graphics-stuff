@@ -1,7 +1,9 @@
 #ifndef GSTUFF_ASSIMP_MODEL_LOADER_H
 #define GSTUFF_ASSIMP_MODEL_LOADER_H
 
-#include "Math.h"
+#include "general/Math.h"
+
+#include "OpenGLMesh.h"
 
 #include <utility>
 #include <vector>
@@ -15,7 +17,9 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-namespace GStuff::General::ModelLoad {
+namespace GStuff::OpenGL::ModelLoad {
+
+using namespace GStuff::OpenGL;
 
 const aiScene* ReadScene(std::string_view filePath);
 
@@ -51,6 +55,24 @@ const aiScene* ReadScene(std::string_view filePath) {
   }
 
   return pScene;
+}
+
+void ProcessAssimpNode(aiNode* pNode, const aiScene* pScene, std::vector<OpenGLMesh3DNUVf>& meshes) {
+
+  const auto numMeshes{pNode->mNumMeshes};
+  for(auto i {0u}; i < numMeshes; ++i) {
+    auto mesh {pNode->mMeshes[i]};
+    aiMesh* pAssimpMesh = pScene->mMeshes[mesh];
+    // meshes.push_back( Write Some Proc function ); 
+  }
+  
+  const auto numChildren {pNode->mNumChildren};
+  for(auto i{0u}; i < numChildren; ++i) {
+    auto child {pNode->mChildren[i]};
+    ProcessAssimpNode(child, pScene, meshes);
+  }
+
+
 }
 
 }

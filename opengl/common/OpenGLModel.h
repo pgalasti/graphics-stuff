@@ -4,7 +4,8 @@
 #include "general/Math.h"
 #include "general/Model.h"
 #include "general/Shaders.h"
-#include "general/AssimpModelLoader.h"
+
+#include "AssimpModelLoader.h"
 
 namespace GStuff::OpenGL {
 
