@@ -5,11 +5,11 @@ INCLUDES := -I../../ -I../../general/glm -I../../general/stb
 UNAME_S  := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-LDLIBS   := -lGLEW -lglfw -framework OpenGL
+LDLIBS   := -lGLEW -lglfw -framework OpenGL -lassimp
 INCLUDES += -I/opt/homebrew/include
 LDFLAGS  := -L/opt/homebrew/lib
 else
-LDLIBS   := -lGLEW -lglfw -lGL
+LDLIBS   := -lGLEW -lglfw -lGL -lassimp
 LDFLAGS  :=
 endif
 
