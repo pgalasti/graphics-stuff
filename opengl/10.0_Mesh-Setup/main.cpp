@@ -10,6 +10,7 @@
 #include "opengl/common/OpenGLCamera.h"
 #include "opengl/common/Light.h"
 #include "opengl/common/OpenGLMesh.h"
+#include "opengl/common/AssimpModelLoader.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

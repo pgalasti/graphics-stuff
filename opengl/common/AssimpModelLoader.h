@@ -28,7 +28,7 @@ using namespace GStuff::General::Math;
 
 using Vertex3DNUVfData = std::pair<std::vector<Vertex3DNUVf>, std::vector<unsigned int>>;
 
-Vertex3DNUVfData Load(std::string_view filePath) {
+inline Vertex3DNUVfData Load(std::string_view filePath) {
 
   // Research assimp loading
   std::vector<Vertex3DNUVf> vertices;
@@ -39,7 +39,7 @@ Vertex3DNUVfData Load(std::string_view filePath) {
 
 
 // Assimp specific functions
-const aiScene* ReadScene(std::string_view filePath) {
+inline const aiScene* ReadScene(std::string_view filePath) {
   Assimp::Importer importer;
 
   constexpr unsigned int flags = 
@@ -57,13 +57,46 @@ const aiScene* ReadScene(std::string_view filePath) {
   return pScene;
 }
 
-void ProcessAssimpNode(aiNode* pNode, const aiScene* pScene, std::vector<OpenGLMesh3DNUVf>& meshes) {
+inline OpenGLMesh3DNUVf extractMesh(aiMesh* pMesh, const aiScene* pScene) {
+
+  std::vector<Vertex3DNUVf> vertices;
+  std::vector<unsigned int> indices;
+
+  for(auto i{0}; i < pMesh->mNumVertices; ++i) {
+    const auto& assimpVertex {pMesh->mVertices[i]};
+    const auto& assimpNormal {pMesh->mNormals[i]};
+    const auto& assimpTexCoord {pMesh->mTextureCoords[0][i]};
+   
+    // Could inline to the aggregate with emplace_back but this is fine for now 
+    Vertex3DNUVf vertex;
+    vertex.x = assimpVertex.x;
+    vertex.y = assimpVertex.y;
+    vertex.z = assimpVertex.z;
+    vertex.nX = assimpNormal.x;
+    vertex.nY = assimpNormal.y;
+    vertex.nZ = assimpNormal.z;
+    vertex.u = assimpTexCoord.x;
+    vertex.v = assimpTexCoord.y;
+    vertices.push_back(vertex);
+  }
+
+  for(unsigned int i{0}; i < pMesh->mNumFaces; ++i) {
+    const auto& face {pMesh->mFaces[i]};
+    for(unsigned int j{0}; j < face.mNumIndices; ++j) {
+      indices.push_back(face.mIndices[j]);
+    }
+  }
+
+  return OpenGLMesh3DNUVf(vertices, indices);
+}
+
+inline void ProcessAssimpNode(aiNode* pNode, const aiScene* pScene, std::vector<OpenGLMesh3DNUVf>& meshes) {
 
   const auto numMeshes{pNode->mNumMeshes};
   for(auto i {0u}; i < numMeshes; ++i) {
     auto mesh {pNode->mMeshes[i]};
     aiMesh* pAssimpMesh = pScene->mMeshes[mesh];
-    // meshes.push_back( Write Some Proc function ); 
+    meshes.push_back(extractMesh(pAssimpMesh, pScene));
   }
   
   const auto numChildren {pNode->mNumChildren};
@@ -71,8 +104,6 @@ void ProcessAssimpNode(aiNode* pNode, const aiScene* pScene, std::vector<OpenGLM
     auto child {pNode->mChildren[i]};
     ProcessAssimpNode(child, pScene, meshes);
   }
-
-
 }
 
 }
