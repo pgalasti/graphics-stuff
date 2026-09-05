@@ -8,6 +8,8 @@
 
 #include "Texture.h"
 
+#include <utility>
+
 namespace GStuff::OpenGL {
 
 template <typename VertexType, typename TextureID>
@@ -31,6 +33,26 @@ public:
   OpenGLMesh(const std::vector<TemplateType>& vertices, const std::vector<unsigned int>& indices)
     : Base(vertices, indices) {  }
   ~OpenGLMesh() { Teardown(); }
+
+  OpenGLMesh(const OpenGLMesh&) = delete;
+  OpenGLMesh& operator=(const OpenGLMesh&) = delete;
+
+  OpenGLMesh(OpenGLMesh&& other) noexcept
+    : Base(std::move(other)),
+      m_VAO{std::exchange(other.m_VAO, 0)},
+      m_VBO{std::exchange(other.m_VBO, 0)},
+      m_EBO{std::exchange(other.m_EBO, 0)} {  }
+
+  OpenGLMesh& operator=(OpenGLMesh&& other) noexcept {
+    if(this != &other) {
+      Teardown();
+      Base::operator=(std::move(other));
+      m_VAO = std::exchange(other.m_VAO, 0);
+      m_VBO = std::exchange(other.m_VBO, 0);
+      m_EBO = std::exchange(other.m_EBO, 0);
+    }
+    return *this;
+  }
 
   void Draw(Program* pProgram) override {
     pProgram->Activate();
@@ -57,9 +79,9 @@ public:
   virtual void Setup() override = 0;
 
 protected:
-  ObjID m_VAO;
-  ObjID m_VBO;
-  ObjID m_EBO;
+  ObjID m_VAO {0};
+  ObjID m_VBO {0};
+  ObjID m_EBO {0};
 
   void Teardown() {
     glDeleteVertexArrays(1, &m_VAO);
@@ -72,7 +94,6 @@ class OpenGLMesh3DNUVf : public OpenGLMesh<Vertex3DNUVf> {
 public:
   OpenGLMesh3DNUVf(const std::vector<Vertex3DNUVf>& vertices, const std::vector<unsigned int>& indices)
       : OpenGLMesh<Vertex3DNUVf>(vertices, indices) { Setup(); }
-  ~OpenGLMesh3DNUVf() = default;
 
   void Setup() override;
 };
@@ -80,7 +101,6 @@ class OpenGLMesh3Df : public OpenGLMesh<Vertex3Df> {
 public:
   OpenGLMesh3Df(const std::vector<Vertex3Df>& vertices, const std::vector<unsigned int>& indices)
       : OpenGLMesh<Vertex3Df>(vertices, indices) { Setup(); }
-  ~OpenGLMesh3Df() = default;
 
   void Setup() override;
 };

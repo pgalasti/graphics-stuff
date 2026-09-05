@@ -17,6 +17,11 @@ public:
     : m_Vertices{vertices}, m_Indices{indices} {}
   virtual ~Mesh() = default;
 
+  Mesh(const Mesh&) = default;
+  Mesh& operator=(const Mesh&) = default;
+  Mesh(Mesh&&) noexcept = default;
+  Mesh& operator=(Mesh&&) noexcept = default;
+
   using Program = GStuff::General::Shaders::Program;
   using TexturePtrList = std::vector<std::pair<BaseTexture<TextureID>*, TextureID>>;
 

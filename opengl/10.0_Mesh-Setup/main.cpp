@@ -9,8 +9,7 @@
 #include "opengl/common/Texture.h"
 #include "opengl/common/OpenGLCamera.h"
 #include "opengl/common/Light.h"
-#include "opengl/common/OpenGLMesh.h"
-#include "opengl/common/AssimpModelLoader.h"
+#include "opengl/common/OpenGLModel.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -125,30 +124,30 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   std::cout << "Loading model" << std::endl;
   ProfilerMs profiler;
   
-   
-  CubeModelLoader cubeLoader(CubeModelLoader::Format::XYZNUV);
+  Vertex3DNUVfModel cubeModel("./models/cube_unit_uv.obj"); 
+  //CubeModelLoader cubeLoader(CubeModelLoader::Format::XYZNUV);
   SphereModelLoader sphereLoader(SphereModelLoader::Format::XYZ);
   
   profiler.Start("Loading Models");
-  const CubeModelLoader::ModelData cubeData = cubeLoader.Load("./models/cube_unit_uv.obj", CubeModelLoader::LOAD_INDICES | CubeModelLoader::LOAD_NORMALS | CubeModelLoader::LOAD_UV);
+  //const CubeModelLoader::ModelData cubeData = cubeLoader.Load("./models/cube_unit_uv.obj", CubeModelLoader::LOAD_INDICES | CubeModelLoader::LOAD_NORMALS | CubeModelLoader::LOAD_UV);
   const SphereModelLoader::ModelData sphereData = sphereLoader.Load("./models/sphere.obj", CubeModelLoader::LOAD_INDICES );
   const auto snapshot {profiler.Stop()};
 
-  CubeModelLoader::VertexData cubeVertices{cubeData.first};
-  const CubeModelLoader::IndexData cubeIndices{cubeData.second};
+  //CubeModelLoader::VertexData cubeVertices{cubeData.first};
+  //const CubeModelLoader::IndexData cubeIndices{cubeData.second};
   SphereModelLoader::VertexData sphereVertices{sphereData.first};
   const SphereModelLoader::IndexData sphereIndices{sphereData.second};
 
-  if(cubeVertices.empty() || cubeIndices.empty()) {
-    throw std::runtime_error("Unable to load vertices/indices of the cube!");
-  }
+  //if(cubeVertices.empty() || cubeIndices.empty()) {
+  //  throw std::runtime_error("Unable to load vertices/indices of the cube!");
+  //}
   if(sphereVertices.empty() || sphereIndices.empty()) {
     throw std::runtime_error("Unable to load vertices/indices of the sphere!");
   }
   //addColor(cubeVertices);
 
   std::cout << snapshot << std::endl;
-  std::cout << "Cube Model Loaded " << cubeVertices.size() << " vertices, " << cubeIndices.size() << " indices" << std::endl;
+  //std::cout << "Cube Model Loaded " << cubeVertices.size() << " vertices, " << cubeIndices.size() << " indices" << std::endl;
   std::cout << "Sphere Model Loaded " << sphereVertices.size() << " vertices, " << sphereIndices.size() << " indices" << std::endl;
 
   // I need to implement a constructor without perfect forwarding to reuse a compiled shader..
@@ -161,7 +160,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     std::make_unique<OpenGLShader>("./shaders/fs-light.glsl", Shader::ShaderType::Fragment)
   };
 
-  OpenGLMesh3DNUVf cubeMesh(cubeVertices, cubeIndices);
+  //OpenGLMesh3DNUVf cubeMesh(cubeVertices, cubeIndices);
   OpenGLMesh3Df sphereMesh(sphereVertices, sphereIndices);
   
   profiler.Start("Load Textures");
@@ -190,8 +189,10 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
   // May need to re-this how to set these
   containerTexture.SetName(CONTAINER_UNIT, "material.diffuse");
   containerEdgeTexture.SetName(CONTAINER_EDGE_UNIT, "material.specular");
-  cubeMesh.SetTexture(&containerTexture, CONTAINER_UNIT);
-  cubeMesh.SetTexture(&containerEdgeTexture, CONTAINER_EDGE_UNIT);
+  // cube_unit_uv.obj ships without a .mtl, so its material declares no textures
+  // for the loader to pick up; supply them by hand.
+  cubeModel.SetTexture(&containerTexture, CONTAINER_UNIT);
+  cubeModel.SetTexture(&containerEdgeTexture, CONTAINER_EDGE_UNIT);
 
   if(doOrtho) { 
     constexpr float orthoHalfHeight {ORTHO_HEIGHT*0.5f};
@@ -256,7 +257,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]]char* argv[]) {
     objectProgram.Activate();
     
     // Draw Cube
-    cubeMesh.Draw(&objectProgram); 
+    cubeModel.Draw(&objectProgram);
+    //cubeMesh.Draw(&objectProgram); 
 
     // Setup Pointlight sphere
     modelMtx = glm::mat4(1.0f);
